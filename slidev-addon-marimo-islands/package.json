@@ -1,0 +1,35 @@
+{
+  "name": "slidev-addon-marimo-islands",
+  "version": "0.1.0",
+  "description": "Slidev addon to embed interactive marimo code cells using Pyodide/WASM",
+  "keywords": [
+    "slidev-addon",
+    "slidev",
+    "marimo",
+    "jupyter",
+    "python",
+    "wasm",
+    "pyodide"
+  ],
+  "author": "Your Name",
+  "license": "MIT",
+  "engines": {
+    "slidev": ">=0.48.0"
+  },
+  "peerDependencies": {
+    "@slidev/cli": ">=0.48.0",
+    "vue": "^3.0.0"
+  },
+  "devDependencies": {
+    "@slidev/cli": "latest",
+    "@slidev/types": "latest",
+    "vue": "^3.4.0"
+  },
+  "files": [
+    "components",
+    "setup",
+    "composables",
+    "utils",
+    "README.md"
+  ]
+}
