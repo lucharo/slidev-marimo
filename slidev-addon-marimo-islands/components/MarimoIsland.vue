@@ -37,22 +37,10 @@ const islandContainer = ref<HTMLElement | null>(null)
 const error = ref<string | null>(null)
 const isLoading = ref(true)
 let marker: HTMLElement | null = null
+let observer: IntersectionObserver | null = null
 
 // After component mounts, create marker and wait for marimo
 onMounted(async () => {
-  // Declare observer variable for cleanup closure
-  let observer: IntersectionObserver | null = null
-
-  // Register cleanup hook BEFORE any awaits (Vue Composition API requirement)
-  onUnmounted(() => {
-    if (observer) {
-      observer.disconnect()
-    }
-    if (marker) {
-      marker.remove()
-      console.log(`🗑️  Island ${myIslandId}: Marker removed`)
-    }
-  })
 
   try {
     // Create marker element immediately - this registers the island
@@ -126,6 +114,19 @@ onMounted(async () => {
     error.value = err instanceof Error ? err.message : 'Unknown error'
     isLoading.value = false
     console.error(`❌ Island ${myIslandId} failed:`, err)
+  }
+})
+
+// Cleanup when component unmounts
+onUnmounted(() => {
+  if (observer) {
+    observer.disconnect()
+    observer = null
+  }
+  if (marker) {
+    marker.remove()
+    console.log(`🗑️  Island ${myIslandId}: Marker removed`)
+    marker = null
   }
 })
 </script>
