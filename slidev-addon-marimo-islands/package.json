@@ -32,7 +32,8 @@
     "vue": "^3.0.0"
   },
   "scripts": {
-    "test": "vitest",
+    "test": "vitest --run",
+    "test:watch": "vitest",
     "test:ui": "vitest --ui",
     "test:coverage": "vitest --coverage",
     "lint": "biome check .",

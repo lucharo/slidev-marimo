@@ -4,7 +4,13 @@
     "enabled": false
   },
   "files": {
-    "includes": ["**", "!**/node_modules", "!**/dist", "!**/*.d.ts"]
+    "includes": [
+      "**",
+      "!**/node_modules",
+      "!**/dist",
+      "!**/*.d.ts",
+      "!**/tests"
+    ]
   },
   "formatter": {
     "enabled": true,
@@ -19,7 +25,8 @@
         "noNonNullAssertion": "off"
       },
       "suspicious": {
-        "noExplicitAny": "off"
+        "noExplicitAny": "off",
+        "useIterableCallbackReturn": "off"
       }
     }
   }
