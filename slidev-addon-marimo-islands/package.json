@@ -22,7 +22,7 @@
     "interactive-notebook",
     "python-slides"
   ],
-  "author": "Luis Chaves Rodriguez <luis.chaves.rodriguez@example.com>",
+  "author": "Luis Chaves Rodriguez",
   "license": "MIT",
   "engines": {
     "slidev": ">=0.48.0"
@@ -64,10 +64,11 @@
   ],
   "repository": {
     "type": "git",
-    "url": "https://github.com/luischavesrodriguez/slidev-marimo-islands.git"
+    "url": "https://github.com/lucharo/slidev-marimo.git",
+    "directory": "slidev-addon-marimo-islands"
   },
-  "homepage": "https://github.com/luischavesrodriguez/slidev-marimo-islands#readme",
+  "homepage": "https://github.com/lucharo/slidev-marimo#readme",
   "bugs": {
-    "url": "https://github.com/luischavesrodriguez/slidev-marimo-islands/issues"
+    "url": "https://github.com/lucharo/slidev-marimo/issues"
   }
 }
