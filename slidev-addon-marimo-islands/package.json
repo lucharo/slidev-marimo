@@ -1,7 +1,16 @@
 {
-  "name": "slidev-addon-marimo-islands",
+  "name": "slidev-marimo-islands",
   "version": "0.1.0",
-  "description": "Slidev addon to embed interactive marimo code cells using Pyodide/WASM",
+  "description": "Slidev addon for interactive marimo notebooks using Pyodide/WASM",
+  "main": "index.ts",
+  "types": "index.ts",
+  "exports": {
+    ".": {
+      "import": "./index.ts",
+      "types": "./index.ts"
+    },
+    "./package.json": "./package.json"
+  },
   "keywords": [
     "slidev-addon",
     "slidev",
@@ -9,9 +18,11 @@
     "jupyter",
     "python",
     "wasm",
-    "pyodide"
+    "pyodide",
+    "interactive-notebook",
+    "python-slides"
   ],
-  "author": "Your Name",
+  "author": "Luis Chaves Rodriguez <luis.chaves.rodriguez@example.com>",
   "license": "MIT",
   "engines": {
     "slidev": ">=0.48.0"
@@ -20,9 +31,26 @@
     "@slidev/cli": ">=0.48.0",
     "vue": "^3.0.0"
   },
+  "scripts": {
+    "build": "npm run clean && npm run build:dts",
+    "build:dts": "tsc --declaration --emitDeclarationOnly --outDir dist",
+    "clean": "rm -rf dist",
+    "dev": "tsc --watch",
+    "test": "vitest",
+    "test:ui": "vitest --ui",
+    "test:coverage": "vitest --coverage",
+    "prepublishOnly": "npm run build",
+    "preview": "npm run build && npm pack --dry-run"
+  },
   "devDependencies": {
     "@slidev/cli": "latest",
     "@slidev/types": "latest",
+    "@types/node": "^20.0.0",
+    "@vitejs/plugin-vue": "^6.0.1",
+    "@vitest/ui": "^1.6.0",
+    "jsdom": "^23.0.0",
+    "typescript": "^5.0.0",
+    "vitest": "^1.6.0",
     "vue": "^3.4.0"
   },
   "files": [
@@ -30,6 +58,16 @@
     "setup",
     "composables",
     "utils",
-    "README.md"
-  ]
+    "README.md",
+    "LICENSE",
+    "index.ts"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/luischavesrodriguez/slidev-marimo-islands.git"
+  },
+  "homepage": "https://github.com/luischavesrodriguez/slidev-marimo-islands#readme",
+  "bugs": {
+    "url": "https://github.com/luischavesrodriguez/slidev-marimo-islands/issues"
+  }
 }

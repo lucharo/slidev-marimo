@@ -3,6 +3,39 @@ import { ref, computed, onMounted, onUnmounted, getCurrentInstance } from 'vue'
 import { useIslandState } from '../composables/useIslandState'
 import '../utils/debugMarimo' // Side effect: adds window.debugMarimo()
 
+/**
+ * Marimo Island Component
+ *
+ * Embeds interactive marimo code cells directly into Slidev presentations using Pyodide/WASM.
+ * Each island is self-contained and can execute Python code without requiring a server.
+ *
+ * @example
+ * ```vue
+ * <template>
+ *   <MarimoIsland
+ *     :code="import marimo as mo
+ * import polars as pl
+ *
+ * df = pl.DataFrame({
+ *     'name': ['Alice', 'Bob', 'Charlie'],
+ *     'score': [95, 87, 91]
+ * })
+ * df"
+ *   />
+ * </template>
+ * ```
+ *
+ * @example Markdown Syntax
+ * ```markdown
+ * ```marimo
+ * import marimo as mo
+ * import polars as pl
+ *
+ * df = pl.DataFrame(...)
+ * df
+ * ```
+ */
+
 // Component props
 const props = withDefaults(defineProps<{
   code: string
