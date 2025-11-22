@@ -41,10 +41,8 @@ const props = withDefaults(defineProps<{
   code: string
   displayCode?: boolean
   hideLines?: number[]
-  reactive?: boolean
 }>(), {
   displayCode: true,
-  reactive: true,
   hideLines: () => []
 })
 
@@ -82,7 +80,7 @@ onMounted(async () => {
     marker.setAttribute('data-island-id', myIslandId)
     marker.setAttribute('data-island-code', encodeURIComponent(processedCode.value))
     marker.setAttribute('data-island-display-code', String(props.displayCode))
-    marker.setAttribute('data-island-reactive', String(props.reactive))
+    marker.setAttribute('data-island-reactive', 'true')
     marker.style.display = 'none'
     document.body.appendChild(marker)
 

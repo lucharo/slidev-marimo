@@ -32,15 +32,9 @@
     "vue": "^3.0.0"
   },
   "scripts": {
-    "build": "npm run clean && npm run build:dts",
-    "build:dts": "tsc --declaration --emitDeclarationOnly --outDir dist",
-    "clean": "rm -rf dist",
-    "dev": "tsc --watch",
     "test": "vitest",
     "test:ui": "vitest --ui",
-    "test:coverage": "vitest --coverage",
-    "prepublishOnly": "npm run build",
-    "preview": "npm run build && npm pack --dry-run"
+    "test:coverage": "vitest --coverage"
   },
   "devDependencies": {
     "@slidev/cli": "latest",
