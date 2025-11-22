@@ -3,11 +3,11 @@
  * Provides observable state and helper methods
  */
 
-import { ref, readonly } from 'vue'
+import { readonly, ref } from "vue";
 
 // Shared state across all instances
-const isReady = ref(false)
-const lastCheckTime = ref(0)
+const isReady = ref(false);
+const lastCheckTime = ref(0);
 
 /**
  * Check if marimo islands custom element is registered
@@ -15,19 +15,19 @@ const lastCheckTime = ref(0)
  * @returns true if marimo-island custom element is defined
  */
 export function checkIslandReady(): boolean {
-  if (typeof window === 'undefined') {
-    return false
+  if (typeof window === "undefined") {
+    return false;
   }
 
-  const ready = !!customElements.get('marimo-island')
+  const ready = !!customElements.get("marimo-island");
 
   if (ready && !isReady.value) {
-    isReady.value = true
-    console.log('✓ Marimo islands custom element registered')
+    isReady.value = true;
+    console.log("✓ Marimo islands custom element registered");
   }
 
-  lastCheckTime.value = Date.now()
-  return ready
+  lastCheckTime.value = Date.now();
+  return ready;
 }
 
 /**
@@ -40,21 +40,21 @@ export function waitForIslandReady(timeoutMs: number = 15000): Promise<void> {
   return new Promise((resolve, reject) => {
     // Check immediately
     if (checkIslandReady()) {
-      resolve()
-      return
+      resolve();
+      return;
     }
 
-    const startTime = Date.now()
+    const startTime = Date.now();
     const interval = setInterval(() => {
       if (checkIslandReady()) {
-        clearInterval(interval)
-        resolve()
+        clearInterval(interval);
+        resolve();
       } else if (Date.now() - startTime > timeoutMs) {
-        clearInterval(interval)
-        reject(new Error(`Marimo islands not ready after ${timeoutMs}ms`))
+        clearInterval(interval);
+        reject(new Error(`Marimo islands not ready after ${timeoutMs}ms`));
       }
-    }, 100)
-  })
+    }, 100);
+  });
 }
 
 /**
@@ -74,6 +74,6 @@ export function useIslandState() {
     isReady: readonly(isReady),
     lastCheckTime: readonly(lastCheckTime),
     checkReady: checkIslandReady,
-    waitUntilReady: waitForIslandReady
-  }
+    waitUntilReady: waitForIslandReady,
+  };
 }

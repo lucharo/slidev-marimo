@@ -1,0 +1,26 @@
+{
+  "$schema": "https://biomejs.dev/schemas/2.3.7/schema.json",
+  "vcs": {
+    "enabled": false
+  },
+  "files": {
+    "includes": ["**", "!**/node_modules", "!**/dist", "!**/*.d.ts"]
+  },
+  "formatter": {
+    "enabled": true,
+    "indentStyle": "space",
+    "indentWidth": 2
+  },
+  "linter": {
+    "enabled": true,
+    "rules": {
+      "recommended": true,
+      "style": {
+        "noNonNullAssertion": "off"
+      },
+      "suspicious": {
+        "noExplicitAny": "off"
+      }
+    }
+  }
+}

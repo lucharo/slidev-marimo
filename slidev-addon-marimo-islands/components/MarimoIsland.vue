@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted, getCurrentInstance } from 'vue'
-import { useIslandState } from '../composables/useIslandState'
-import '../utils/debugMarimo' // Side effect: adds window.debugMarimo()
+import { computed, getCurrentInstance, onMounted, onUnmounted, ref } from "vue";
+import { useIslandState } from "../composables/useIslandState";
+import "../utils/debugMarimo"; // Side effect: adds window.debugMarimo()
 
 /**
  * Marimo Island Component
@@ -37,129 +37,140 @@ import '../utils/debugMarimo' // Side effect: adds window.debugMarimo()
  */
 
 // Component props
-const props = withDefaults(defineProps<{
-  code: string
-  displayCode?: boolean
-  hideLines?: number[]
-}>(), {
-  displayCode: true,
-  hideLines: () => []
-})
+const props = withDefaults(
+  defineProps<{
+    code: string;
+    displayCode?: boolean;
+    hideLines?: number[];
+  }>(),
+  {
+    displayCode: true,
+    hideLines: () => [],
+  },
+);
 
 // Process code to hide specified lines
 const processedCode = computed(() => {
   if (!props.hideLines || props.hideLines.length === 0) {
-    return props.code
+    return props.code;
   }
 
-  const lines = props.code.split('\n')
+  const lines = props.code.split("\n");
   return lines
     .filter((_, index) => !props.hideLines.includes(index + 1))
-    .join('\n')
-})
+    .join("\n");
+});
 
 // Generate unique ID from Vue's component UID (HMR-safe!)
-const instance = getCurrentInstance()
-const myIslandId = `island-${instance?.uid || Math.random().toString(36).slice(2)}`
+const instance = getCurrentInstance();
+const myIslandId = `island-${instance?.uid || Math.random().toString(36).slice(2)}`;
 
 // Refs
-const { waitUntilReady } = useIslandState()
-const islandContainer = ref<HTMLElement | null>(null)
-const error = ref<string | null>(null)
-const isLoading = ref(true)
-let marker: HTMLElement | null = null
-let observer: IntersectionObserver | null = null
+const { waitUntilReady } = useIslandState();
+const islandContainer = ref<HTMLElement | null>(null);
+const error = ref<string | null>(null);
+const isLoading = ref(true);
+let marker: HTMLElement | null = null;
+let observer: IntersectionObserver | null = null;
 
 // After component mounts, create marker and wait for marimo
 onMounted(async () => {
-
   try {
     // Create marker element immediately - this registers the island
-    marker = document.createElement('div')
-    marker.classList.add('marimo-island-marker')
-    marker.setAttribute('data-island-id', myIslandId)
-    marker.setAttribute('data-island-code', encodeURIComponent(processedCode.value))
-    marker.setAttribute('data-island-display-code', String(props.displayCode))
-    marker.setAttribute('data-island-reactive', 'true')
-    marker.style.display = 'none'
-    document.body.appendChild(marker)
+    marker = document.createElement("div");
+    marker.classList.add("marimo-island-marker");
+    marker.setAttribute("data-island-id", myIslandId);
+    marker.setAttribute(
+      "data-island-code",
+      encodeURIComponent(processedCode.value),
+    );
+    marker.setAttribute("data-island-display-code", String(props.displayCode));
+    marker.setAttribute("data-island-reactive", "true");
+    marker.style.display = "none";
+    document.body.appendChild(marker);
 
-    console.log(`📝 Island ${myIslandId} marker created`)
+    console.log(`📝 Island ${myIslandId} marker created`);
 
     // Wait for marimo to be ready
-    await waitUntilReady()
+    await waitUntilReady();
 
-    console.log(`✓ Island ${myIslandId}: Marimo ready, finding island element...`)
+    console.log(
+      `✓ Island ${myIslandId}: Marimo ready, finding island element...`,
+    );
 
     // Find our island by the marker ID attribute
     const island = document.querySelector<HTMLElement>(
-      `marimo-island[data-marker-id="${myIslandId}"]`
-    )
+      `marimo-island[data-marker-id="${myIslandId}"]`,
+    );
 
     if (!island) {
       // Don't throw error - this happens when Slidev preloads the next slide
       // The component mounts but marimo hasn't initialized this island yet
       // Just stay in loading state - will work when user navigates to this slide and refreshes
-      console.warn(`⏸️  Island ${myIslandId}: Not yet initialized (preloaded slide). Navigate here and refresh to load.`)
-      return
+      console.warn(
+        `⏸️  Island ${myIslandId}: Not yet initialized (preloaded slide). Navigate here and refresh to load.`,
+      );
+      return;
     }
 
-    console.log(`✓ Island ${myIslandId}: Found element, waiting for visibility...`)
+    console.log(
+      `✓ Island ${myIslandId}: Found element, waiting for visibility...`,
+    );
 
     // DON'T move the island - that breaks React's internal state
     // Use IntersectionObserver to continuously monitor visibility
     // This handles Slidev's slide navigation correctly
     if (islandContainer.value) {
       observer = new IntersectionObserver((entries) => {
-        entries.forEach(entry => {
+        entries.forEach((entry) => {
           if (entry.isIntersecting) {
             // Container is visible - position and show island
-            const rect = islandContainer.value!.getBoundingClientRect()
+            const rect = islandContainer.value?.getBoundingClientRect();
 
             // Position island absolutely at the same location as our placeholder
-            island.style.position = 'absolute'
-            island.style.left = `${rect.left + window.scrollX}px`
-            island.style.top = `${rect.top + window.scrollY}px`
-            island.style.width = `${rect.width || 800}px`
-            island.style.display = 'block'
-            island.style.zIndex = '10'
+            island.style.position = "absolute";
+            island.style.left = `${rect.left + window.scrollX}px`;
+            island.style.top = `${rect.top + window.scrollY}px`;
+            island.style.width = `${rect.width || 800}px`;
+            island.style.display = "block";
+            island.style.zIndex = "10";
 
             // Reserve space in the layout for the island
-            islandContainer.value!.style.minHeight = '100px'
+            islandContainer.value?.style.minHeight = "100px";
 
-            isLoading.value = false
+            isLoading.value = false;
 
-            console.log(`✓ Island ${myIslandId}: Visible and positioned`)
+            console.log(`✓ Island ${myIslandId}: Visible and positioned`);
           } else {
             // Container is NOT visible - hide island
-            island.style.display = 'none'
-            console.log(`🔒 Island ${myIslandId}: Hidden (not visible)`)
+            island.style.display = "none";
+            console.log(`🔒 Island ${myIslandId}: Hidden (not visible)`);
           }
-        })
-      })
+        });
+      });
 
       // Start observing the container - keep observer active!
-      observer.observe(islandContainer.value)
+      observer.observe(islandContainer.value);
     }
   } catch (err) {
-    error.value = err instanceof Error ? err.message : 'Unknown error'
-    isLoading.value = false
-    console.error(`❌ Island ${myIslandId} failed:`, err)
+    error.value = err instanceof Error ? err.message : "Unknown error";
+    isLoading.value = false;
+    console.error(`❌ Island ${myIslandId} failed:`, err);
   }
-})
+});
 
 // Cleanup when component unmounts
 onUnmounted(() => {
   if (observer) {
-    observer.disconnect()
-    observer = null
+    observer.disconnect();
+    observer = null;
   }
   if (marker) {
-    marker.remove()
-    console.log(`🗑️  Island ${myIslandId}: Marker removed`)
-    marker = null
+    marker.remove();
+    console.log(`🗑️  Island ${myIslandId}: Marker removed`);
+    marker = null;
   }
-})
+});
 </script>
 
 <template>

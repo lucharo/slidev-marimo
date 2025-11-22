@@ -1,17 +1,14 @@
-import { defineConfig } from 'vitest/config'
+import { defineConfig } from "vitest/config";
 
 export default defineConfig(async () => {
-  const vue = await import('@vitejs/plugin-vue')
+  const vue = await import("@vitejs/plugin-vue");
 
   return {
     plugins: [vue.default()],
-    testEnvironment: 'jsdom',
+    testEnvironment: "jsdom",
     testTimeout: 10000,
-    setupFiles: ['tests/setup.ts'],
+    setupFiles: ["tests/setup.ts"],
     // Include component files if needed
-    exclude: [
-      'node_modules',
-      'dist'
-    ]
-  }
-})
+    exclude: ["node_modules", "dist"],
+  };
+});

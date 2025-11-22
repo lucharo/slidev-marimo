@@ -15,7 +15,7 @@
  * Get all island marker elements from DOM
  */
 function getIslandMarkers(): NodeListOf<HTMLElement> {
-  return document.querySelectorAll('.marimo-island-marker')
+  return document.querySelectorAll(".marimo-island-marker");
 }
 
 /**
@@ -23,40 +23,40 @@ function getIslandMarkers(): NodeListOf<HTMLElement> {
  * This is called by setup/main.ts when markers are stable
  */
 export function initializeMarimo() {
-  const markers = getIslandMarkers()
+  const markers = getIslandMarkers();
 
   if (markers.length === 0) {
-    console.warn('⚠️ No island markers found in DOM')
-    return
+    console.warn("⚠️ No island markers found in DOM");
+    return;
   }
 
-  console.log(`🚀 Initializing marimo with ${markers.length} islands from DOM`)
+  console.log(`🚀 Initializing marimo with ${markers.length} islands from DOM`);
 
   // Create marimo-island elements from markers
   markers.forEach((marker, idx) => {
-    const island = document.createElement('marimo-island')
-    island.setAttribute('data-app-id', 'slidev-app')
-    island.setAttribute('data-cell-id', marker.dataset.islandId!)
-    island.setAttribute('data-cell-idx', String(idx))
-    island.setAttribute('data-reactive', marker.dataset.islandReactive!)
-    island.setAttribute('data-marker-id', marker.dataset.islandId!) // Link back to marker
-    island.style.display = 'none'
+    const island = document.createElement("marimo-island");
+    island.setAttribute("data-app-id", "slidev-app");
+    island.setAttribute("data-cell-id", marker.dataset.islandId!);
+    island.setAttribute("data-cell-idx", String(idx));
+    island.setAttribute("data-reactive", marker.dataset.islandReactive!);
+    island.setAttribute("data-marker-id", marker.dataset.islandId!); // Link back to marker
+    island.style.display = "none";
 
-    const output = document.createElement('marimo-cell-output')
+    const output = document.createElement("marimo-cell-output");
 
-    const code = document.createElement('marimo-cell-code')
-    code.hidden = marker.dataset.islandDisplayCode !== 'true'
-    code.textContent = decodeURIComponent(marker.dataset.islandCode!)
+    const code = document.createElement("marimo-cell-code");
+    code.hidden = marker.dataset.islandDisplayCode !== "true";
+    code.textContent = decodeURIComponent(marker.dataset.islandCode!);
 
-    island.appendChild(output)
-    island.appendChild(code)
-    document.body.appendChild(island)
-  })
+    island.appendChild(output);
+    island.appendChild(code);
+    document.body.appendChild(island);
+  });
 
-  console.log('✓ Created all island elements in DOM from markers')
+  console.log("✓ Created all island elements in DOM from markers");
 
   // Now load marimo script - it will parse these islands
-  loadMarimoScript()
+  loadMarimoScript();
 }
 
 /**
@@ -64,27 +64,29 @@ export function initializeMarimo() {
  * Uses version 0.11.6 - last known good version before CSS bug
  */
 function loadMarimoScript() {
-  if (document.getElementById('marimo-islands-script')) {
-    console.warn('⚠️ Marimo script already loaded')
-    return
+  if (document.getElementById("marimo-islands-script")) {
+    console.warn("⚠️ Marimo script already loaded");
+    return;
   }
 
-  const MARIMO_VERSION = '0.11.6'
+  const MARIMO_VERSION = "0.11.6";
 
-  const script = document.createElement('script')
-  script.id = 'marimo-islands-script'
-  script.src = `https://cdn.jsdelivr.net/npm/@marimo-team/islands@${MARIMO_VERSION}/dist/main.js`
-  script.type = 'module'
+  const script = document.createElement("script");
+  script.id = "marimo-islands-script";
+  script.src = `https://cdn.jsdelivr.net/npm/@marimo-team/islands@${MARIMO_VERSION}/dist/main.js`;
+  script.type = "module";
 
   script.onerror = () => {
-    console.error('❌ Failed to load marimo islands library')
-  }
+    console.error("❌ Failed to load marimo islands library");
+  };
 
   script.onload = () => {
-    console.log(`✓ Marimo islands script loaded successfully (v${MARIMO_VERSION})`)
-  }
+    console.log(
+      `✓ Marimo islands script loaded successfully (v${MARIMO_VERSION})`,
+    );
+  };
 
-  document.head.appendChild(script)
+  document.head.appendChild(script);
 }
 
 /**
@@ -92,7 +94,7 @@ function loadMarimoScript() {
  * Used by setup/main.ts to poll for stability
  */
 export function getIslandCount(): number {
-  return getIslandMarkers().length
+  return getIslandMarkers().length;
 }
 
 /**
@@ -100,7 +102,7 @@ export function getIslandCount(): number {
  * Used for debugging and coordination
  */
 export function isMarimoInitialized(): boolean {
-  return !!document.getElementById('marimo-islands-script')
+  return !!document.getElementById("marimo-islands-script");
 }
 
 /**
@@ -108,17 +110,17 @@ export function isMarimoInitialized(): boolean {
  * Used when reinitializing after HMR
  */
 export function cleanupMarimo() {
-  console.log('🧹 Cleaning up marimo islands...')
+  console.log("🧹 Cleaning up marimo islands...");
 
   // Remove all marimo-island elements
-  const islands = document.querySelectorAll('marimo-island')
-  islands.forEach(island => island.remove())
+  const islands = document.querySelectorAll("marimo-island");
+  islands.forEach((island) => island.remove());
 
   // Remove marimo script tag so it can be reloaded
-  const script = document.getElementById('marimo-islands-script')
+  const script = document.getElementById("marimo-islands-script");
   if (script) {
-    script.remove()
+    script.remove();
   }
 
-  console.log('✓ Marimo cleanup complete')
+  console.log("✓ Marimo cleanup complete");
 }

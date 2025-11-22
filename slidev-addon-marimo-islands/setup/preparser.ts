@@ -14,49 +14,49 @@
  * mo.md('Hello from Python!')" />
  */
 
-import { definePreparserSetup } from '@slidev/types'
+import { definePreparserSetup } from "@slidev/types";
 
 export default definePreparserSetup(() => {
   return [
     {
       transformRawLines(lines: string[]) {
-        const result: string[] = []
-        let i = 0
+        const result: string[] = [];
+        let i = 0;
 
         while (i < lines.length) {
-          const line = lines[i]
+          const line = lines[i];
 
           // Check if this line starts a marimo code block
-          if (line.trim() === '```marimo') {
+          if (line.trim() === "```marimo") {
             // Collect all lines until we find the closing ```
-            const codeLines: string[] = []
-            i++ // Skip the opening ```marimo
+            const codeLines: string[] = [];
+            i++; // Skip the opening ```marimo
 
-            while (i < lines.length && lines[i].trim() !== '```') {
-              codeLines.push(lines[i])
-              i++
+            while (i < lines.length && lines[i].trim() !== "```") {
+              codeLines.push(lines[i]);
+              i++;
             }
 
             // i now points to the closing ```, skip it
-            i++
+            i++;
 
             // Join the code lines and escape quotes
-            const code = codeLines.join('\n').trimEnd()
-            const escapedCode = code.replace(/"/g, '&quot;')
+            const code = codeLines.join("\n").trimEnd();
+            const escapedCode = code.replace(/"/g, "&quot;");
 
             // Add the MarimoIsland component
-            result.push(`<MarimoIsland code="${escapedCode}" />`)
+            result.push(`<MarimoIsland code="${escapedCode}" />`);
           } else {
             // Regular line, keep as-is
-            result.push(line)
-            i++
+            result.push(line);
+            i++;
           }
         }
 
         // Replace the original lines array contents
-        lines.length = 0
-        lines.push(...result)
-      }
-    }
-  ]
-})
+        lines.length = 0;
+        lines.push(...result);
+      },
+    },
+  ];
+});
