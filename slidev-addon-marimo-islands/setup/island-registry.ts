@@ -44,12 +44,39 @@ export function initializeMarimo() {
 
     const output = document.createElement("marimo-cell-output");
 
-    const code = document.createElement("marimo-cell-code");
-    code.hidden = marker.dataset.islandDisplayCode !== "true";
-    code.textContent = decodeURIComponent(marker.dataset.islandCode!);
+    const displayCode = marker.dataset.islandDisplayCode;
+    console.log(
+      `Island ${marker.dataset.islandId}: displayCode="${displayCode}"`,
+    );
 
+    // Create code element if needed
+    let codeElement: HTMLElement | null = null;
+    if (displayCode === "true") {
+      // Show code using code editor component
+      codeElement = document.createElement("marimo-ui-element");
+      const editor = document.createElement("marimo-code-editor");
+      const codeText = decodeURIComponent(marker.dataset.islandCode!);
+      // Use JSON.stringify to properly escape quotes, newlines, and special chars
+      const escapedCode = JSON.stringify(codeText);
+      editor.setAttribute("data-language", '"python"');
+      editor.setAttribute("data-disabled", "false");
+      editor.setAttribute("data-initial-value", escapedCode);
+      editor.setAttribute("data-label", "null");
+      editor.setAttribute("data-placeholder", '""');
+      codeElement.appendChild(editor);
+    } else {
+      // Hide code but keep it for execution
+      codeElement = document.createElement("marimo-cell-code");
+      codeElement.setAttribute("hidden", "");
+      (codeElement as HTMLElement).textContent = decodeURIComponent(
+        marker.dataset.islandCode!,
+      );
+    }
+
+    // Add elements in order: output first, then code
     island.appendChild(output);
-    island.appendChild(code);
+    island.appendChild(codeElement);
+
     document.body.appendChild(island);
   });
 

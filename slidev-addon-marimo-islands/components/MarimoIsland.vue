@@ -136,7 +136,9 @@ onMounted(async () => {
             island.style.zIndex = "10";
 
             // Reserve space in the layout for the island
-            islandContainer.value?.style.minHeight = "100px";
+            if (islandContainer.value) {
+              islandContainer.value.style.minHeight = "100px";
+            }
 
             isLoading.value = false;
 
@@ -267,5 +269,10 @@ onUnmounted(() => {
 
 .island-content {
   /* Island will be rendered here */
+}
+
+:global(marimo-code-editor button[aria-label*="Run"]),
+:global(marimo-code-editor button[aria-label*="run"]) {
+  display: none;
 }
 </style>

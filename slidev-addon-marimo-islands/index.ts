@@ -9,3 +9,5 @@
 export { default as MarimoIsland } from "./components/MarimoIsland.vue";
 // Main addon setup - automatically loaded by Slidev
 export { default } from "./setup/main";
+// Preparser for marimo code blocks - automatically loaded by Slidev
+export { default as preparser } from "./setup/preparser";

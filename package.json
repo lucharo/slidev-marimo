@@ -4,5 +4,9 @@
   "private": true,
   "devDependencies": {
     "@biomejs/biome": "2.3.7"
+  },
+  "dependencies": {
+    "@slidev/theme-default": "^0.25.0",
+    "slidev-marimo-islands": "file:slidev-addon-marimo-islands"
   }
 }
