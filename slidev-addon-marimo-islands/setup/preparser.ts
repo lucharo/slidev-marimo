@@ -62,6 +62,9 @@ export default definePreparserSetup(() => {
                 } else if (key === "hideLines") {
                   // Parse hideLines as JSON array
                   componentTag += ` :hide-lines="${value}"`;
+                } else if (key === "codePosition") {
+                  // codePosition: "top" | "bottom"
+                  componentTag += ` code-position="${value}"`;
                 } else {
                   componentTag += ` ${key}="${value}"`;
                 }

@@ -56,6 +56,7 @@ For advanced control, use the `<MarimoIsland>` component:
 | `code` | `string` | required | Python code to execute |
 | `displayCode` | `boolean` | `true` | Show source code |
 | `hideLines` | `number[]` | `[]` | Hide specific lines (1-indexed) |
+| `codePosition` | `"top"` \| `"bottom"` | `"bottom"` | Position code above or below output |
 
 **Example:**
 

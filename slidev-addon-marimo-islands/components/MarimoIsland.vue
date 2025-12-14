@@ -42,10 +42,12 @@ const props = withDefaults(
     code: string;
     displayCode?: boolean;
     hideLines?: number[];
+    codePosition?: "top" | "bottom";
   }>(),
   {
     displayCode: true,
     hideLines: () => [],
+    codePosition: "bottom",
   },
 );
 
@@ -85,6 +87,7 @@ onMounted(async () => {
       encodeURIComponent(processedCode.value),
     );
     marker.setAttribute("data-island-display-code", String(props.displayCode));
+    marker.setAttribute("data-island-code-position", props.codePosition);
     marker.setAttribute("data-island-reactive", "true");
     marker.style.display = "none";
     document.body.appendChild(marker);
@@ -274,5 +277,11 @@ onUnmounted(() => {
 :global(marimo-code-editor button[aria-label*="Run"]),
 :global(marimo-code-editor button[aria-label*="run"]) {
   display: none;
+}
+
+/* Code position: top - reverse the flex order to show code above output */
+:global(marimo-island.code-position-top) {
+  display: flex !important;
+  flex-direction: column-reverse;
 }
 </style>

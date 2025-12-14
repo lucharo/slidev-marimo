@@ -42,6 +42,12 @@ export function initializeMarimo() {
     island.setAttribute("data-marker-id", marker.dataset.islandId!); // Link back to marker
     island.style.display = "none";
 
+    // Add class for code position (CSS will handle the visual reorder)
+    const codePosition = marker.dataset.islandCodePosition || "bottom";
+    if (codePosition === "top") {
+      island.classList.add("code-position-top");
+    }
+
     const output = document.createElement("marimo-cell-output");
 
     const displayCode = marker.dataset.islandDisplayCode;
