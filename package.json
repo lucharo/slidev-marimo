@@ -3,8 +3,7 @@
   "type": "module",
   "private": true,
   "devDependencies": {
-    "@biomejs/biome": "2.3.7",
-    "playwright-chromium": "^1.57.0"
+    "@biomejs/biome": "2.3.7"
   },
   "dependencies": {
     "@slidev/theme-default": "^0.25.0",
