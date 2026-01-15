@@ -19,13 +19,7 @@ npm install slidev-marimo-islands
 
 ## Quick Start
 
-Try the marimo islands example: https://docs.marimo.io/guides/island_example/
-
-```sh
-npx slidev islands-example.md
-```
-
-Add the add-on to your [`slidev`](https://sli.dev/) markdown file:
+1. Add the addon to your slidev frontmatter:
 
 ```yaml
 ---
@@ -34,18 +28,26 @@ addons:
 ---
 ```
 
-Use `marimo` code blocks in your slides:
+2. Use `marimo` code blocks in your slides:
 
 ````markdown
-# Interactive Python Demo
-
 ```marimo
 import marimo as mo
-
-slider = mo.ui.slider(0, 100, value=50)
-mo.md(f"Value: {slider.value}")
+slider = mo.ui.slider(0, 100)
+slider
 ```
 ````
+
+That's it! Run `npx slidev your-slides.md` and your Python code will execute in the browser.
+
+### Try the Example
+
+```sh
+git clone https://github.com/lucharo/slidev-marimo.git
+cd slidev-marimo
+npm install
+npx slidev islands-example.md
+```
 
 ## Component Props
 
