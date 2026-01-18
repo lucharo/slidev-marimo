@@ -1,0 +1,70 @@
+{
+  "name": "slidev-marimo-live",
+  "version": "0.1.0",
+  "description": "Slidev addon for live marimo kernel integration via WebSocket",
+  "main": "index.ts",
+  "types": "index.ts",
+  "exports": {
+    ".": {
+      "import": "./index.ts",
+      "types": "./index.ts"
+    },
+    "./package.json": "./package.json"
+  },
+  "keywords": [
+    "slidev-addon",
+    "slidev",
+    "marimo",
+    "jupyter",
+    "python",
+    "live-kernel",
+    "interactive-notebook",
+    "python-slides"
+  ],
+  "author": "Luis Chaves Rodriguez",
+  "license": "MIT",
+  "engines": {
+    "slidev": ">=0.48.0"
+  },
+  "peerDependencies": {
+    "@slidev/cli": ">=0.48.0",
+    "vue": "^3.0.0"
+  },
+  "scripts": {
+    "test": "vitest --run",
+    "test:watch": "vitest",
+    "lint": "biome check .",
+    "lint:fix": "biome check --write .",
+    "format": "biome format --write .",
+    "start-marimo": "bash scripts/start-kernel.sh"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "2.3.7",
+    "@slidev/cli": "latest",
+    "@slidev/types": "latest",
+    "@vitejs/plugin-vue": "^6.0.1",
+    "@vitest/ui": "^1.6.0",
+    "jsdom": "^23.0.0",
+    "vitest": "^1.6.0",
+    "vue": "^3.4.0"
+  },
+  "files": [
+    "components",
+    "setup",
+    "composables",
+    "styles",
+    "scripts",
+    "README.md",
+    "LICENSE",
+    "index.ts"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/lucharo/slidev-marimo.git",
+    "directory": "slidev-addon-marimo-live"
+  },
+  "homepage": "https://github.com/lucharo/slidev-marimo#readme",
+  "bugs": {
+    "url": "https://github.com/lucharo/slidev-marimo/issues"
+  }
+}
