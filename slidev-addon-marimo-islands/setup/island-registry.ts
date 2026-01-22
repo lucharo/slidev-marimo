@@ -11,6 +11,8 @@
  * NO GLOBAL STATE - DOM is the single source of truth!
  */
 
+import { MARIMO_VERSION } from "./constants";
+
 /**
  * Get all island marker elements from DOM
  */
@@ -34,55 +36,52 @@ export function initializeMarimo() {
 
   // Create marimo-island elements from markers
   markers.forEach((marker, idx) => {
+    // Validate required attributes
+    const islandId = marker.dataset.islandId;
+    const islandReactive = marker.dataset.islandReactive;
+    const islandCode = marker.dataset.islandCode;
+
+    if (!islandId) {
+      console.warn(`⚠️ Skipping marker ${idx}: missing island ID`);
+      return;
+    }
+
+    if (!islandCode) {
+      console.warn(
+        `⚠️ Skipping marker ${idx} (${islandId}): missing island code`,
+      );
+      return;
+    }
+
+    // Decode the code, with error handling for malformed encoding
+    let decodedCode: string;
+    try {
+      decodedCode = decodeURIComponent(islandCode);
+    } catch (err) {
+      console.warn(
+        `⚠️ Skipping marker ${idx} (${islandId}): failed to decode code - ${err}`,
+      );
+      return;
+    }
+
     const island = document.createElement("marimo-island");
     island.setAttribute("data-app-id", "slidev-app");
-    island.setAttribute("data-cell-id", marker.dataset.islandId!);
+    island.setAttribute("data-cell-id", islandId);
     island.setAttribute("data-cell-idx", String(idx));
-    island.setAttribute("data-reactive", marker.dataset.islandReactive!);
-    island.setAttribute("data-marker-id", marker.dataset.islandId!); // Link back to marker
+    island.setAttribute("data-reactive", islandReactive || "true");
+    island.setAttribute("data-marker-id", islandId); // Link back to marker
     island.style.display = "none";
-
-    // Add class for code position (CSS will handle the visual reorder)
-    const codePosition = marker.dataset.islandCodePosition || "bottom";
-    if (codePosition === "top") {
-      island.classList.add("code-position-top");
-    }
 
     const output = document.createElement("marimo-cell-output");
 
-    const displayCode = marker.dataset.islandDisplayCode;
-    console.log(
-      `Island ${marker.dataset.islandId}: displayCode="${displayCode}"`,
-    );
+    // marimo-cell-code holds the Python code for execution
+    // Always hidden - code display is handled by Vue component
+    const code = document.createElement("marimo-cell-code");
+    code.hidden = true;
+    code.textContent = decodedCode;
 
-    // Create code element if needed
-    let codeElement: HTMLElement | null = null;
-    if (displayCode === "true") {
-      // Show code using code editor component
-      codeElement = document.createElement("marimo-ui-element");
-      const editor = document.createElement("marimo-code-editor");
-      const codeText = decodeURIComponent(marker.dataset.islandCode!);
-      // Use JSON.stringify to properly escape quotes, newlines, and special chars
-      const escapedCode = JSON.stringify(codeText);
-      editor.setAttribute("data-language", '"python"');
-      editor.setAttribute("data-disabled", "false");
-      editor.setAttribute("data-initial-value", escapedCode);
-      editor.setAttribute("data-label", "null");
-      editor.setAttribute("data-placeholder", '""');
-      codeElement.appendChild(editor);
-    } else {
-      // Hide code but keep it for execution
-      codeElement = document.createElement("marimo-cell-code");
-      codeElement.setAttribute("hidden", "");
-      (codeElement as HTMLElement).textContent = decodeURIComponent(
-        marker.dataset.islandCode!,
-      );
-    }
-
-    // Add elements in order: output first, then code
     island.appendChild(output);
-    island.appendChild(codeElement);
-
+    island.appendChild(code);
     document.body.appendChild(island);
   });
 
@@ -94,15 +93,12 @@ export function initializeMarimo() {
 
 /**
  * Load marimo islands script from CDN
- * Uses version 0.11.6 - last known good version before CSS bug
  */
 function loadMarimoScript() {
   if (document.getElementById("marimo-islands-script")) {
     console.warn("⚠️ Marimo script already loaded");
     return;
   }
-
-  const MARIMO_VERSION = "0.11.6";
 
   const script = document.createElement("script");
   script.id = "marimo-islands-script";

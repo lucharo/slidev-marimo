@@ -36,7 +36,7 @@ export function checkIslandReady(): boolean {
  * @param timeoutMs - Maximum time to wait in milliseconds
  * @returns Promise that resolves when ready or rejects on timeout
  */
-export function waitForIslandReady(timeoutMs: number = 15000): Promise<void> {
+export function waitForIslandReady(timeoutMs: number = 60000): Promise<void> {
   return new Promise((resolve, reject) => {
     // Check immediately
     if (checkIslandReady()) {

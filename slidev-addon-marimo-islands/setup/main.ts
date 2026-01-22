@@ -1,6 +1,7 @@
 // Setup for marimo islands integration
 // This file is automatically loaded by Slidev
 
+import { MARIMO_VERSION } from "./constants";
 import { getIslandCount, initializeMarimo } from "./island-registry";
 
 export default ({ app }) => {
@@ -47,9 +48,6 @@ export default ({ app }) => {
       document.head.appendChild(katex);
 
       // Load marimo islands CSS
-      // Use version 0.11.6 - last known good version before CSS bug (0.11.7+)
-      // See: https://github.com/marimo-team/marimo/issues/3964
-      const MARIMO_VERSION = "0.11.6";
       const link = document.createElement("link");
       link.id = "marimo-islands-css";
       link.rel = "stylesheet";
@@ -66,8 +64,7 @@ export default ({ app }) => {
       document.head.appendChild(marimoFilename);
 
       // Add marimo-mode tag to set the app mode to "read"
-      // This may help initialize initialModeAtom correctly
-      // See: https://github.com/marimo-team/marimo/issues/3964
+      // This helps initialize initialModeAtom correctly for islands
       const marimoMode = document.createElement("marimo-mode");
       marimoMode.setAttribute("data-mode", "read");
       marimoMode.hidden = true;

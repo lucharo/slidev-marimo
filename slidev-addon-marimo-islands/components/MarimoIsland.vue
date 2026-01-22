@@ -42,12 +42,10 @@ const props = withDefaults(
     code: string;
     displayCode?: boolean;
     hideLines?: number[];
-    codePosition?: "top" | "bottom";
   }>(),
   {
     displayCode: true,
     hideLines: () => [],
-    codePosition: "bottom",
   },
 );
 
@@ -74,6 +72,7 @@ const error = ref<string | null>(null);
 const isLoading = ref(true);
 let marker: HTMLElement | null = null;
 let observer: IntersectionObserver | null = null;
+let resizeObserver: ResizeObserver | null = null;
 
 // After component mounts, create marker and wait for marimo
 onMounted(async () => {
@@ -87,7 +86,6 @@ onMounted(async () => {
       encodeURIComponent(processedCode.value),
     );
     marker.setAttribute("data-island-display-code", String(props.displayCode));
-    marker.setAttribute("data-island-code-position", props.codePosition);
     marker.setAttribute("data-island-reactive", "true");
     marker.style.display = "none";
     document.body.appendChild(marker);
@@ -125,10 +123,14 @@ onMounted(async () => {
     // This handles Slidev's slide navigation correctly
     if (islandContainer.value) {
       observer = new IntersectionObserver((entries) => {
+        // Guard against callback firing during unmount
+        const container = islandContainer.value;
+        if (!container) return;
+
         entries.forEach((entry) => {
           if (entry.isIntersecting) {
             // Container is visible - position and show island
-            const rect = islandContainer.value?.getBoundingClientRect();
+            const rect = container.getBoundingClientRect();
 
             // Position island absolutely at the same location as our placeholder
             island.style.position = "absolute";
@@ -138,14 +140,34 @@ onMounted(async () => {
             island.style.display = "block";
             island.style.zIndex = "10";
 
-            // Reserve space in the layout for the island
-            if (islandContainer.value) {
-              islandContainer.value.style.minHeight = "100px";
+            // Use ResizeObserver to sync container height with island height
+            // This ensures content below the island flows correctly
+            if (!resizeObserver) {
+              resizeObserver = new ResizeObserver(() => {
+                // Guard against callback firing on detached elements
+                if (!island.isConnected) return;
+                const islandHeight = island.offsetHeight;
+                if (islandContainer.value && islandHeight > 0) {
+                  islandContainer.value.style.height = `${islandHeight}px`;
+                }
+              });
+              resizeObserver.observe(island);
+            }
+
+            // Set initial height
+            const initialHeight = island.offsetHeight;
+            if (initialHeight > 0) {
+              container.style.height = `${initialHeight}px`;
+            } else {
+              // Fallback until island renders
+              container.style.minHeight = "100px";
             }
 
             isLoading.value = false;
 
-            console.log(`✓ Island ${myIslandId}: Visible and positioned`);
+            console.log(
+              `✓ Island ${myIslandId}: Visible and positioned, height synced`,
+            );
           } else {
             // Container is NOT visible - hide island
             island.style.display = "none";
@@ -166,6 +188,10 @@ onMounted(async () => {
 
 // Cleanup when component unmounts
 onUnmounted(() => {
+  if (resizeObserver) {
+    resizeObserver.disconnect();
+    resizeObserver = null;
+  }
   if (observer) {
     observer.disconnect();
     observer = null;
@@ -180,6 +206,11 @@ onUnmounted(() => {
 
 <template>
   <div class="marimo-island-wrapper">
+    <!-- Code display -->
+    <div v-if="displayCode && !error" class="code-block">
+      <pre><code class="language-python">{{ processedCode }}</code></pre>
+    </div>
+
     <!-- Error state -->
     <div v-if="error" class="error-box">
       <div class="error-icon">⚠️</div>
@@ -189,13 +220,13 @@ onUnmounted(() => {
       </div>
     </div>
 
-    <!-- Loading state -->
-    <div v-else-if="isLoading" class="loading-box">
+    <!-- Loading state - independent so it shows alongside code display -->
+    <div v-if="isLoading && !error" class="loading-box">
       <div class="spinner"></div>
       <div class="loading-message">Initializing Python runtime...</div>
     </div>
 
-    <!-- Island container - island will be moved here -->
+    <!-- Island container - marimo output will be positioned here -->
     <div ref="islandContainer" class="island-content"></div>
   </div>
 </template>
@@ -274,14 +305,24 @@ onUnmounted(() => {
   /* Island will be rendered here */
 }
 
-:global(marimo-code-editor button[aria-label*="Run"]),
-:global(marimo-code-editor button[aria-label*="run"]) {
-  display: none;
+.code-block {
+  margin-bottom: 0.5rem;
+  border-radius: 6px;
+  overflow: hidden;
 }
 
-/* Code position: top - reverse the flex order to show code above output */
-:global(marimo-island.code-position-top) {
-  display: flex !important;
-  flex-direction: column-reverse;
+.code-block pre {
+  margin: 0;
+  padding: 1rem;
+  background: #1e1e1e;
+  overflow-x: auto;
+}
+
+.code-block code {
+  font-family: 'Fira Code', 'Fira Mono', Menlo, Monaco, 'Courier New', monospace;
+  font-size: 0.875rem;
+  line-height: 1.5;
+  color: #d4d4d4;
+  white-space: pre;
 }
 </style>
