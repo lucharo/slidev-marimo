@@ -133,6 +133,50 @@ async function findIsland(
 }
 
 /**
+ * Inject styles into marimo-slider shadow DOMs to fix Tailwind class issues.
+ * Shadow DOM isolates styles, so Tailwind classes inside don't work without this.
+ */
+function injectSliderStyles(container: HTMLElement) {
+  // Find all marimo-slider elements
+  const sliders = container.querySelectorAll('marimo-slider');
+  sliders.forEach((slider) => {
+    const shadowRoot = (slider as HTMLElement).shadowRoot;
+    if (shadowRoot && !shadowRoot.querySelector('#marimo-slider-fix')) {
+      const style = document.createElement('style');
+      style.id = 'marimo-slider-fix';
+      style.textContent = `
+        /* Fix slider track dimensions - Tailwind classes aren't working */
+        [data-orientation="horizontal"] {
+          width: 144px !important;  /* w-36 = 9rem = 144px */
+          display: flex !important;
+          align-items: center !important;
+        }
+        [data-testid="track"] {
+          width: 100% !important;
+          height: 8px !important;
+          background-color: #475569 !important;
+          border-radius: 9999px !important;
+        }
+        [data-testid="range"] {
+          height: 100% !important;
+          background-color: #28879f !important;
+          border-radius: 9999px !important;
+        }
+        [data-testid="thumb"] {
+          width: 16px !important;
+          height: 16px !important;
+          background-color: #1e293b !important;
+          border: 2px solid #28879f !important;
+          border-radius: 50% !important;
+        }
+      `;
+      shadowRoot.appendChild(style);
+      console.debug('💉 Injected slider styles into shadow DOM');
+    }
+  });
+}
+
+/**
  * Move the island element into our output container.
  * This keeps the island in Vue's DOM flow for proper positioning.
  */
@@ -252,6 +296,13 @@ onMounted(async () => {
     if (outputContainer.value) {
       moveIslandToContainer(islandEl, outputContainer.value);
       console.log(`✓ Cell ${cellId.value}: positioned inline`);
+
+      // Step 6: Inject styles into slider shadow DOMs (delayed to let marimo render)
+      setTimeout(() => {
+        if (outputContainer.value) {
+          injectSliderStyles(outputContainer.value);
+        }
+      }, 2000);
     }
   } catch (err) {
     error.value = err instanceof Error ? err.message : "Unknown error";
