@@ -133,69 +133,88 @@ async function findIsland(
 }
 
 /**
- * Inject styles into marimo-slider shadow DOMs to fix Tailwind class issues.
+ * Inject styles into ALL marimo-slider shadow DOMs on the page.
  * Shadow DOM isolates styles, so Tailwind classes inside don't work without this.
- * Uses CSS custom properties for theme compatibility.
+ * Searches globally because sliders are deeply nested inside marimo-island internals.
  */
-function injectSliderStyles(container: HTMLElement) {
-  const sliders = container.querySelectorAll('marimo-slider');
+function injectAllSliderStyles() {
+  // Search globally - sliders are inside marimo-island's React-rendered structure
+  const sliders = document.querySelectorAll('marimo-slider');
+  let injectedCount = 0;
+
   sliders.forEach((slider) => {
     const shadowRoot = (slider as HTMLElement).shadowRoot;
     if (shadowRoot && !shadowRoot.querySelector('#marimo-slider-fix')) {
       const style = document.createElement('style');
       style.id = 'marimo-slider-fix';
-      // Use CSS custom properties that inherit from document for theme support
       style.textContent = `
         [data-orientation="horizontal"] {
-          width: 144px !important;
+          width: 200px !important;
           display: flex !important;
           align-items: center !important;
         }
         [data-testid="track"] {
           width: 100% !important;
           height: 8px !important;
-          background-color: var(--accent, #475569) !important;
+          background-color: #64748b !important;
           border-radius: 9999px !important;
         }
         [data-testid="range"] {
           height: 100% !important;
-          background-color: var(--primary, #28879f) !important;
+          background-color: #3b82f6 !important;
           border-radius: 9999px !important;
         }
         [data-testid="thumb"] {
           width: 16px !important;
           height: 16px !important;
-          background-color: var(--background, #1e293b) !important;
-          border: 2px solid var(--primary, #28879f) !important;
+          background-color: white !important;
+          border: 2px solid #3b82f6 !important;
           border-radius: 50% !important;
         }
       `;
       shadowRoot.appendChild(style);
+      injectedCount++;
     }
   });
+
+  return injectedCount;
 }
 
 /**
- * Wait for slider shadow roots to be available, then inject styles.
- * Polls with increasing intervals to handle variable render times.
+ * Poll for slider shadow roots and inject styles when ready.
+ * Runs globally with longer polling to handle slow marimo initialization.
  */
-function waitForSliderShadowRoots(container: HTMLElement, maxAttempts = 10) {
+function pollForSliders(maxAttempts = 20) {
   let attempts = 0;
   const check = () => {
-    const sliders = container.querySelectorAll('marimo-slider');
-    if (sliders.length === 0) return; // No sliders in this cell
+    const sliders = document.querySelectorAll('marimo-slider');
+    if (sliders.length === 0) {
+      // No sliders yet, keep polling
+      if (attempts < maxAttempts) {
+        attempts++;
+        setTimeout(check, 500);
+      }
+      return;
+    }
 
-    const allHaveShadowRoots = Array.from(sliders).every(
+    // Check if all sliders have shadow roots
+    const slidersWithShadowRoots = Array.from(sliders).filter(
       (s) => (s as HTMLElement).shadowRoot
     );
-    if (allHaveShadowRoots) {
-      injectSliderStyles(container);
+
+    if (slidersWithShadowRoots.length > 0) {
+      const injected = injectAllSliderStyles();
+      // If we injected some but not all, keep polling for more
+      if (injected < sliders.length && attempts < maxAttempts) {
+        attempts++;
+        setTimeout(check, 500);
+      }
     } else if (attempts < maxAttempts) {
       attempts++;
       setTimeout(check, 500);
     }
   };
-  setTimeout(check, 500);
+  setTimeout(check, 1000); // Start after 1 second to let marimo initialize
 }
 
 /**
@@ -319,8 +338,12 @@ onMounted(async () => {
       moveIslandToContainer(islandEl, outputContainer.value);
       console.log(`✓ Cell ${cellId.value}: positioned inline`);
 
-      // Step 6: Inject styles into slider shadow DOMs when available
-      waitForSliderShadowRoots(outputContainer.value);
+      // Step 6: Poll for sliders and inject styles globally
+      // Run once per page, not per component
+      if (!(window as any).__marimoSliderStylesPolling) {
+        (window as any).__marimoSliderStylesPolling = true;
+        pollForSliders();
+      }
     }
   } catch (err) {
     error.value = err instanceof Error ? err.message : "Unknown error";
