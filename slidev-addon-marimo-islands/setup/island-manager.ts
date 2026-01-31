@@ -20,6 +20,64 @@ import type { CellRegistry } from "../composables/useCellRegistry";
 import { MARIMO_VERSION } from "./constants";
 import { patchKernelMessages } from "./kernel-message-patch";
 
+// Track if bridge trap is installed
+let bridgeTrapInstalled = false;
+
+/**
+ * Install a property trap to intercept when marimo creates the bridge.
+ * This allows us to patch putControlRequest immediately when the bridge is created,
+ * BEFORE marimo sends any messages through it.
+ */
+function installBridgeTrap(): void {
+  if (bridgeTrapInstalled) return;
+  if (typeof window === "undefined") return;
+
+  const BRIDGE_KEY = "_marimo_private_IslandsPyodideBridge";
+
+  // Check if bridge already exists (shouldn't happen if we call this early enough)
+  if ((window as Record<string, unknown>)[BRIDGE_KEY]) {
+    console.log("⚠️ Bridge already exists, patching now");
+    patchKernelMessages();
+    bridgeTrapInstalled = true;
+    return;
+  }
+
+  let _bridge: unknown = undefined;
+
+  Object.defineProperty(window, BRIDGE_KEY, {
+    configurable: true,
+    enumerable: true,
+    get() {
+      return _bridge;
+    },
+    set(newBridge) {
+      console.log("🎯 Bridge being created, intercepting...");
+      _bridge = newBridge;
+
+      // Patch synchronously - we need to wrap putControlRequest
+      // BEFORE marimo calls it for the first time
+      if (newBridge && typeof newBridge.putControlRequest === "function") {
+        const originalPut = newBridge.putControlRequest.bind(newBridge);
+        newBridge.putControlRequest = async (request: unknown) => {
+          // Add type field if missing
+          if (request && typeof request === "object" && !("type" in request)) {
+            const req = request as Record<string, unknown>;
+            if (Array.isArray(req.objectIds) && Array.isArray(req.values)) {
+              console.debug('🔧 Inline patch: adding type="update-ui-element"');
+              return originalPut({ type: "update-ui-element", ...req });
+            }
+          }
+          return originalPut(request);
+        };
+        console.log("✓ Bridge patched inline on creation");
+      }
+    },
+  });
+
+  bridgeTrapInstalled = true;
+  console.log("✓ Bridge trap installed");
+}
+
 // Track initialization state
 let isInitialized = false;
 let resourcesLoaded = false;
@@ -31,6 +89,10 @@ let resourcesLoaded = false;
 export function loadMarimoResources(): void {
   if (resourcesLoaded) return;
   if (typeof document === "undefined") return;
+
+  // Install bridge trap FIRST - before any marimo code loads
+  // This ensures we can patch putControlRequest the moment the bridge is created
+  installBridgeTrap();
 
   // Check if already loaded
   if (document.getElementById("marimo-islands-css")) {
@@ -253,6 +315,11 @@ function loadMarimoScript(kernel: MarimoKernel): Promise<void> {
 
     kernel.startLoading();
 
+    // Start polling for the bridge BEFORE loading the script
+    // This ensures we patch putControlRequest as soon as it becomes available,
+    // before marimo sends any initialization messages
+    applyKernelPatch();
+
     const script = document.createElement("script");
     script.id = "marimo-islands-script";
     script.src = `https://cdn.jsdelivr.net/npm/@marimo-team/islands@${MARIMO_VERSION}/dist/main.js`;
@@ -260,9 +327,6 @@ function loadMarimoScript(kernel: MarimoKernel): Promise<void> {
 
     script.onload = () => {
       console.log(`✓ Marimo script loaded (v${MARIMO_VERSION})`);
-      // Apply kernel message patch immediately after script loads
-      // This must happen BEFORE cells execute to fix DataFrame and other components
-      applyKernelPatch();
       // Note: kernel.markReady() will be called when we receive the kernel-ready message
       resolve();
     };
@@ -283,7 +347,8 @@ let patchRetryTimeout: ReturnType<typeof setTimeout> | null = null;
 
 /**
  * Apply the kernel message patch with retries.
- * The bridge may not be available immediately after kernel ready signal.
+ * Called BEFORE loading the marimo script to intercept messages as early as possible.
+ * Uses aggressive polling (10ms) to catch the bridge the moment it's created.
  */
 function applyKernelPatch(): void {
   // Cancel any pending retry from previous initialization
@@ -293,13 +358,13 @@ function applyKernelPatch(): void {
   }
 
   let attempts = 0;
-  const maxAttempts = 20;
-  const retryInterval = 100;
+  const maxAttempts = 500; // 5 seconds at 10ms intervals
+  const retryInterval = 10; // Poll aggressively to catch bridge creation
 
   const tryPatch = () => {
     attempts++;
     if (patchKernelMessages()) {
-      console.log("✓ Kernel message patch applied successfully");
+      console.log(`✓ Kernel message patch applied (attempt ${attempts})`);
       patchRetryTimeout = null;
       return;
     }
