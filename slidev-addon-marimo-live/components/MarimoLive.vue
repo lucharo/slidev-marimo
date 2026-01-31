@@ -185,35 +185,43 @@ let autoRunTimeout: ReturnType<typeof setTimeout> | null = null;
 // Auto-run on mount if enabled and connected
 onMounted(() => {
   if (props.autoRun) {
-    // Wait for kernel to be ready
-    const unwatch = watch(
+    // Check if already ready - run immediately
+    if (kernel.isKernelReady.value && kernel.isConnected.value && !hasRun.value) {
+      runCell();
+      return;
+    }
+
+    // Otherwise, watch for kernel to become ready
+    let unwatch: (() => void) | null = null;
+    let unwatchConnection: (() => void) | null = null;
+
+    const cleanup = () => {
+      if (unwatch) { unwatch(); unwatch = null; }
+      if (unwatchConnection) { unwatchConnection(); unwatchConnection = null; }
+    };
+
+    unwatch = watch(
       () => kernel.isKernelReady.value,
       (ready) => {
         if (ready && !hasRun.value) {
           runCell();
-          unwatch();
+          cleanup();
         }
       },
-      { immediate: true },
     );
 
-    // Also watch connection state
-    const unwatchConnection = watch(
+    unwatchConnection = watch(
       () => kernel.isConnected.value,
       (connected) => {
         if (connected && kernel.isKernelReady.value && !hasRun.value) {
           runCell();
-          unwatchConnection();
+          cleanup();
         }
       },
-      { immediate: true },
     );
 
     // Cleanup watchers after 10s if never triggered
-    autoRunTimeout = setTimeout(() => {
-      unwatch();
-      unwatchConnection();
-    }, 10000);
+    autoRunTimeout = setTimeout(cleanup, 10000);
   }
 });
 
