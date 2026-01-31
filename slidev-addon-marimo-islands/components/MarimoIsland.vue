@@ -521,6 +521,7 @@ if (import.meta.hot) {
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
 }
 
+/* Dark mode (default) */
 .code-block pre {
   margin: 0;
   padding: 1rem 1.25rem;
@@ -536,7 +537,61 @@ if (import.meta.hot) {
   white-space: pre;
 }
 
-/* Enhanced Prism.js syntax highlighting - One Dark theme colors */
+/* Light mode overrides */
+:root:not(.dark) .code-block pre {
+  background: #f6f8fa;
+}
+
+:root:not(.dark) .code-block code {
+  color: #24292e;
+}
+
+/* Light mode syntax colors (GitHub light theme) */
+:root:not(.dark) .code-block :deep(.token.comment),
+:root:not(.dark) .code-block :deep(.token.prolog),
+:root:not(.dark) .code-block :deep(.token.doctype),
+:root:not(.dark) .code-block :deep(.token.cdata) {
+  color: #6a737d;
+  font-style: italic;
+}
+
+:root:not(.dark) .code-block :deep(.token.keyword) {
+  color: #d73a49;
+}
+
+:root:not(.dark) .code-block :deep(.token.builtin) {
+  color: #6f42c1;
+}
+
+:root:not(.dark) .code-block :deep(.token.function) {
+  color: #6f42c1;
+}
+
+:root:not(.dark) .code-block :deep(.token.string) {
+  color: #032f62;
+}
+
+:root:not(.dark) .code-block :deep(.token.number) {
+  color: #005cc5;
+}
+
+:root:not(.dark) .code-block :deep(.token.operator) {
+  color: #d73a49;
+}
+
+:root:not(.dark) .code-block :deep(.token.punctuation) {
+  color: #24292e;
+}
+
+:root:not(.dark) .code-block :deep(.token.class-name) {
+  color: #6f42c1;
+}
+
+:root:not(.dark) .code-block :deep(.token.boolean) {
+  color: #005cc5;
+}
+
+/* Dark mode Prism.js syntax highlighting - One Dark theme colors */
 .code-block :deep(.token.comment),
 .code-block :deep(.token.prolog),
 .code-block :deep(.token.doctype),
