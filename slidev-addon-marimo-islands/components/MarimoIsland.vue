@@ -250,7 +250,8 @@ onMounted(async () => {
 
   try {
     // Step 1: Register this cell in the registry
-    cellId.value = registry.registerCell(processedCode.value, true);
+    // Use props.code (full code) for execution, processedCode is only for display
+    cellId.value = registry.registerCell(props.code, true);
     console.debug(`📝 Cell ${cellId.value}: mounted, waiting for kernel...`);
 
     // Step 2: Wait for kernel to be ready
