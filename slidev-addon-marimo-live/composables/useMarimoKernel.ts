@@ -52,9 +52,13 @@ export function initializeKernelListeners(kernel: KernelConnection): void {
   });
 
   // Handle kernel ready
-  kernel.onKernelReady((data: KernelReadyData) => {
-    console.log("[marimo-live] Kernel ready", data);
-    console.log("[marimo-live] Kernel ready with", data.cellIds?.length, "cells");
+  kernel.onKernelReady(async (data: KernelReadyData) => {
+    console.log(
+      "[marimo-live] Kernel ready with",
+      data.cellIds?.length,
+      "cells:",
+      data,
+    );
     setKernelReady(true);
 
     // Register notebook cells (from the .py file)
@@ -70,6 +74,16 @@ export function initializeKernelListeners(kernel: KernelConnection): void {
       for (let i = 0; i < data.cellIds.length; i++) {
         registerCell(data.cellIds[i], data.codes[i] || "");
       }
+    }
+
+    // In edit mode, auto_instantiate doesn't run cells automatically.
+    // Call instantiate() after kernel-ready to run all cells and share state.
+    try {
+      console.log("[marimo-live] Calling instantiate to run all cells...");
+      await kernel.instantiate();
+      console.log("[marimo-live] Notebook instantiated successfully");
+    } catch (err) {
+      console.warn("[marimo-live] Failed to instantiate notebook:", err);
     }
   });
 

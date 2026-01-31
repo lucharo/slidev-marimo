@@ -187,8 +187,10 @@ async function runCell() {
 let autoRunTimeout: ReturnType<typeof setTimeout> | null = null;
 
 // Check if cell already has output from instantiation
+// Checks for null, undefined, AND empty string to avoid false positives
 const hasExistingOutput = computed(() => {
-  return cellState.value?.output !== null && cellState.value?.output !== undefined;
+  const output = cellState.value?.output;
+  return output !== null && output !== undefined && output !== '';
 });
 
 // Auto-run on mount if enabled and connected

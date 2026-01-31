@@ -5,6 +5,7 @@
 #     "polars",
 #     "altair",
 #     "pyarrow",
+#     "pandas",
 # ]
 # ///
 
@@ -119,6 +120,20 @@ def text_input_demo(mo):
 def text_output(mo, text):
     """Greet the user"""
     return mo.md(f"Hello, **{text.value}**!" if text.value else "_Enter your name above_")
+
+
+@app.cell
+def greeting_input(mo):
+    """Text input for greeting with default marimonaut"""
+    name_input = mo.ui.text(value="marimonaut 🧑‍🚀", label="Enter your name")
+    name_input
+    return (name_input,)
+
+
+@app.cell
+def greeting_output(mo, name_input):
+    """Display greeting"""
+    return mo.md(f"# Hello, {name_input.value}!")
 
 
 if __name__ == "__main__":

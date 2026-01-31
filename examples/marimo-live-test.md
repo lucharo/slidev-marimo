@@ -67,6 +67,16 @@ Type your name and see a greeting.
 
 ---
 
+# Greeting Demo
+
+Enter your name and see the greeting update!
+
+<MarimoCell cell="greeting_input" :displayCode="false" />
+
+<MarimoCell cell="greeting_output" :displayCode="false" />
+
+---
+
 # How It Works
 
 ```

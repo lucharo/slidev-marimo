@@ -114,9 +114,12 @@ echo "Press Ctrl+C to stop the server"
 echo ""
 
 # Start marimo with the required flags for Slidev integration
+# Using 'edit' mode to get cell names for referencing by name (e.g., cell="slider_demo")
+# The Slidev addon will call /api/kernel/instantiate to run all cells on connect.
 # --headless: Don't open browser
 # --port: Specify port
 # --no-token: Disable authentication (for local dev)
+# --no-skew-protection: Disable token validation for local dev
 # --allow-origins: Allow CORS from Slidev dev server
 exec marimo edit "$NOTEBOOK" \
     --headless \

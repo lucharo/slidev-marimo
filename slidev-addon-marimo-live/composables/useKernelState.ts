@@ -151,11 +151,13 @@ export function getNotebookCellById(cellId: string): NotebookCell | undefined {
 
 /**
  * Get a notebook cell by name (function name in marimo)
- * Note: Access the reactive map's size first to ensure Vue tracks this dependency
  */
 export function getNotebookCellByName(name: string): NotebookCell | undefined {
-  // Access size to create a reactive dependency (Vue tracks Map.size changes)
-  const _ = notebookCellsByName.size;
+  // IMPORTANT: Accessing .size creates a Vue reactive dependency on the Map.
+  // Without this line, computed properties using this function won't re-evaluate
+  // when the Map changes (e.g., when cells are registered after kernel-ready).
+  // This is a standard Vue 3 pattern for reactive Maps. Do not remove.
+  void notebookCellsByName.size;
   return notebookCellsByName.get(name);
 }
 
