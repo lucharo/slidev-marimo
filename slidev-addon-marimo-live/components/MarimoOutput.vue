@@ -32,6 +32,12 @@ const consoleOutput = computed(() => {
     })
     .join("\n");
 });
+
+// Check if console output contains HTML that should be rendered
+const consoleHasHtml = computed(() => {
+  if (!consoleOutput.value) return false;
+  return /<[a-z][\s\S]*>/i.test(consoleOutput.value);
+});
 </script>
 
 <template>
@@ -49,9 +55,14 @@ const consoleOutput = computed(() => {
       v-html="htmlContent"
     />
 
-    <!-- Console output -->
+    <!-- Console output (render as HTML if it contains HTML tags) -->
+    <div
+      v-if="consoleOutput && consoleHasHtml"
+      class="output-console output-console-html"
+      v-html="consoleOutput"
+    />
     <pre
-      v-if="consoleOutput"
+      v-else-if="consoleOutput"
       class="output-console"
     >{{ consoleOutput }}</pre>
 
