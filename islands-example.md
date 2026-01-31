@@ -22,17 +22,48 @@ mo.md('Hello from Python!')
 
 ---
 
-# Interactive Widget
+# Interactive Widgets
 
-Self-contained slider with markdown output:
+Multiple widgets in a horizontal stack:
 
 ```marimo
-slider = mo.ui.slider(0, 100)
-slider
+slider = mo.ui.slider(0, 100, label="Slider")
+dropdown = mo.ui.dropdown(["Apple", "Banana", "Cherry"], label="Fruit")
+date = mo.ui.date(label="Date")
+mo.hstack([slider, dropdown, date])
 ```
 
+```marimo displayCode=false
+mo.md(f'''
+**Values:**
+- Slider: {slider.value}
+- Dropdown: {dropdown.value}
+- Date: {date.value}
+''')
+```
+
+---
+
+# DrawData by wigglystuff
+
+Draw your data, see it plotted! Built with [wigglystuff](https://github.com/koaning/wigglystuff) by Vincent Warmerdam.
+
 ```marimo
-mo.md(f'Slider value: **{slider.value}**')
+from drawdata import ScatterWidget
+widget = mo.ui.anywidget(ScatterWidget())
+widget
+```
+
+```marimo displayCode=false
+import altair as alt
+df = widget.data_as_pandas
+if df is not None and len(df) > 0:
+    chart = alt.Chart(df).mark_circle(size=60).encode(
+        x='x', y='y', color='color'
+    ).properties(width=300, height=200)
+    mo.output.replace(chart)
+else:
+    mo.md("*Draw some points to see them plotted!*")
 ```
 
 ---
