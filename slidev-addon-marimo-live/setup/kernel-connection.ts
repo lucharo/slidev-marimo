@@ -97,6 +97,7 @@ export function createKernelConnection(
   let state: ConnectionState = "disconnected";
   let reconnectAttempts = 0;
   let reconnectTimeout: ReturnType<typeof setTimeout> | null = null;
+  let serverToken: string | null = null;
 
   // Event handlers
   const messageHandlers = new Set<(msg: MarimoMessage) => void>();
@@ -110,6 +111,27 @@ export function createKernelConnection(
     if (state !== newState) {
       state = newState;
       stateChangeHandlers.forEach((h) => h(state));
+    }
+  }
+
+  /**
+   * Fetch the skew protection token from the marimo server.
+   * This token is embedded in the HTML page and required for API requests.
+   */
+  async function fetchServerToken(): Promise<string | null> {
+    try {
+      const response = await fetch(config.httpUrl);
+      const html = await response.text();
+      const match = html.match(/data-token="([^"]+)"/);
+      if (match) {
+        console.log("[marimo-live] Obtained server token");
+        return match[1];
+      }
+      console.warn("[marimo-live] No server token found in page");
+      return null;
+    } catch (err) {
+      console.error("[marimo-live] Failed to fetch server token:", err);
+      return null;
     }
   }
 
@@ -214,6 +236,11 @@ export function createKernelConnection(
       "Marimo-Session-Id": config.sessionId,
     };
 
+    // Include server token for skew protection if available
+    if (serverToken) {
+      headers["Marimo-Server-Token"] = serverToken;
+    }
+
     const response = await fetch(url, {
       method,
       headers,
@@ -244,6 +271,9 @@ export function createKernelConnection(
       }
 
       setState("connecting");
+
+      // Fetch server token for skew protection
+      serverToken = await fetchServerToken();
 
       return new Promise<void>((resolve, reject) => {
         const wsUrl = new URL(config.wsUrl);
