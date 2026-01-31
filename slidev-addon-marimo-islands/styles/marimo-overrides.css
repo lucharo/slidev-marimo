@@ -12,7 +12,7 @@
 :root {
   /* Light mode defaults */
   --marimo-output-bg: var(--slidev-code-background, #f8f9fa);
-  --marimo-output-fg: inherit;
+  --marimo-output-fg: #0f172a;  /* Dark text for light mode */
   --marimo-table-header-bg: rgba(0, 0, 0, 0.05);
   --marimo-table-border: rgba(0, 0, 0, 0.1);
 
@@ -23,15 +23,12 @@
   --background: #fff;
   --foreground: #0f172a;
   --accent-foreground: #0f172a;
-
-  /* Enable light-dark() function support */
-  color-scheme: light dark;
 }
 
 /* Dark mode values */
 .dark {
   --marimo-output-bg: var(--slidev-code-background, #1e1e1e);
-  --marimo-output-fg: var(--slidev-code-foreground, #d4d4d4);
+  --marimo-output-fg: #eceeed;  /* Light text for dark mode */
   --marimo-table-header-bg: rgba(255, 255, 255, 0.1);
   --marimo-table-border: rgba(255, 255, 255, 0.1);
 
@@ -42,8 +39,6 @@
   --background: #181c1a;
   --foreground: #eceeed;
   --accent-foreground: #eceeed;
-
-  color-scheme: dark;
 }
 
 /* ============================================
