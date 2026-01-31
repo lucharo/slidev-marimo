@@ -48,7 +48,7 @@ Draw your data, see it plotted! Built with [wigglystuff](https://github.com/koan
 <div class="grid grid-cols-2 gap-8">
 <div>
 
-```marimo
+```marimo hideLines=1,2
 import micropip
 await micropip.install(['drawdata']);
 from drawdata import ScatterWidget
