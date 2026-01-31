@@ -504,30 +504,88 @@ if (import.meta.hot) {
 
 /* Clean up marimo output styling */
 .output-container :deep(marimo-cell-output) {
-  padding: 1rem;
-  background: var(--slidev-code-background, #f8f9fa);
-  border-radius: 6px;
+  padding: 1rem 1.25rem;
+  background: var(--marimo-output-bg, #f8f9fa);
+  color: var(--marimo-output-fg, #1a1a1a);
+  border-radius: 8px;
   overflow-x: auto;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
+  font-size: 0.95rem;
+  line-height: 1.5;
 }
 
 .code-block {
   margin-bottom: 0.5rem;
-  border-radius: 6px;
+  border-radius: 8px;
   overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
 }
 
 .code-block pre {
   margin: 0;
-  padding: 1rem;
-  background: #1e1e1e;
+  padding: 1rem 1.25rem;
+  background: #282c34;
   overflow-x: auto;
 }
 
 .code-block code {
   font-family: 'Fira Code', 'Fira Mono', Menlo, Monaco, 'Courier New', monospace;
-  font-size: 0.875rem;
-  line-height: 1.5;
-  color: #d4d4d4;
+  font-size: 0.9rem;
+  line-height: 1.6;
+  color: #abb2bf;
   white-space: pre;
+}
+
+/* Enhanced Prism.js syntax highlighting - One Dark theme colors */
+.code-block :deep(.token.comment),
+.code-block :deep(.token.prolog),
+.code-block :deep(.token.doctype),
+.code-block :deep(.token.cdata) {
+  color: #5c6370;
+  font-style: italic;
+}
+
+.code-block :deep(.token.keyword) {
+  color: #c678dd;
+}
+
+.code-block :deep(.token.builtin) {
+  color: #e5c07b;
+}
+
+.code-block :deep(.token.function) {
+  color: #61afef;
+}
+
+.code-block :deep(.token.string) {
+  color: #98c379;
+}
+
+.code-block :deep(.token.number) {
+  color: #d19a66;
+}
+
+.code-block :deep(.token.operator) {
+  color: #56b6c2;
+}
+
+.code-block :deep(.token.punctuation) {
+  color: #abb2bf;
+}
+
+.code-block :deep(.token.class-name) {
+  color: #e5c07b;
+}
+
+.code-block :deep(.token.boolean) {
+  color: #d19a66;
+}
+
+.code-block :deep(.token.attr-name) {
+  color: #d19a66;
+}
+
+.code-block :deep(.token.attr-value) {
+  color: #98c379;
 }
 </style>
