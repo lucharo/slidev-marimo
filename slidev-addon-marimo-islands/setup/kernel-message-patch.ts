@@ -10,12 +10,14 @@
  * This causes: msgspec.ValidationError: Object missing required field `type`
  *
  * The Fix:
- * Monkey-patch the bridge's putControlRequest to add the missing type field.
+ * Monkey-patch bridge methods (putControlRequest, sendComponentValues, etc.)
+ * to add the missing type field before messages reach the kernel.
  */
 
 // Type for the bridge interface
 interface IslandsBridge {
   putControlRequest: (request: unknown) => Promise<unknown>;
+  sendComponentValues: (request: unknown) => Promise<unknown>;
   [key: string]: unknown;
 }
 
@@ -27,11 +29,14 @@ interface ControlRequest {
   [key: string]: unknown;
 }
 
-// Store original function for restoration
-let originalPutControlRequest: ((request: unknown) => Promise<unknown>) | null = null;
-// Store reference to our wrapper to detect bridge recreation
-let patchedPutControlRequest: ((request: unknown) => Promise<unknown>) | null = null;
+// Store original functions for restoration
+const originalMethods: Map<string, (request: unknown) => Promise<unknown>> = new Map();
+// Store reference to our wrappers to detect bridge recreation
+const patchedMethods: Map<string, (request: unknown) => Promise<unknown>> = new Map();
 let isPatched = false;
+
+// Methods that need patching - they may send messages without the type field
+const METHODS_TO_PATCH = ["putControlRequest", "sendComponentValues"];
 
 /**
  * Determine the message type based on the request structure.
@@ -55,7 +60,7 @@ function inferMessageType(request: ControlRequest): string | null {
 /**
  * Patch a control request to add the missing type field if needed.
  */
-function patchRequest(request: unknown): unknown {
+function patchRequest(request: unknown, methodName: string): unknown {
   if (typeof request !== "object" || request === null) {
     return request;
   }
@@ -71,7 +76,7 @@ function patchRequest(request: unknown): unknown {
   const inferredType = inferMessageType(req);
 
   if (inferredType) {
-    console.debug(`🔧 Patching request: adding type="${inferredType}"`);
+    console.debug(`🔧 [${methodName}] Patching request: adding type="${inferredType}"`);
     return {
       type: inferredType,
       ...req,
@@ -79,15 +84,29 @@ function patchRequest(request: unknown): unknown {
   }
 
   // Unknown request shape - log for debugging but pass through
-  console.warn("⚠️ Unknown request shape, passing through without type:", req);
+  console.warn(`⚠️ [${methodName}] Unknown request shape, passing through without type:`, req);
   return request;
+}
+
+/**
+ * Create a wrapper for a bridge method that patches requests.
+ */
+function createPatchedMethod(
+  methodName: string,
+  original: (request: unknown) => Promise<unknown>
+): (request: unknown) => Promise<unknown> {
+  return async (request: unknown): Promise<unknown> => {
+    const patchedRequest = patchRequest(request, methodName);
+    return original(patchedRequest);
+  };
 }
 
 /**
  * Install the kernel message patch.
  *
- * This patches window._marimo_private_IslandsPyodideBridge.putControlRequest
- * to add the missing `type` field to messages before they reach the kernel.
+ * This patches window._marimo_private_IslandsPyodideBridge methods
+ * (putControlRequest, sendComponentValues, etc.) to add the missing
+ * `type` field to messages before they reach the kernel.
  *
  * Should be called after the marimo script has initialized the bridge.
  */
@@ -108,18 +127,18 @@ export function patchKernelMessages(): boolean {
     return false;
   }
 
-  if (typeof bridge.putControlRequest !== "function") {
-    console.warn("⚠️ Cannot patch kernel messages: putControlRequest not found");
-    return false;
-  }
+  // Check if any patched method no longer matches (bridge was recreated)
+  const bridgeRecreated = isPatched && METHODS_TO_PATCH.some((method) => {
+    const patched = patchedMethods.get(method);
+    const current = bridge[method] as ((request: unknown) => Promise<unknown>) | undefined;
+    return patched && current !== patched;
+  });
 
-  // Reset state if bridge was recreated (e.g., during HMR edge cases)
-  // Detect when we think we're patched but the bridge function is not our wrapper
-  if (isPatched && patchedPutControlRequest && bridge.putControlRequest !== patchedPutControlRequest) {
+  if (bridgeRecreated) {
     console.debug("🔧 Bridge recreated, resetting patch state");
     isPatched = false;
-    originalPutControlRequest = null;
-    patchedPutControlRequest = null;
+    originalMethods.clear();
+    patchedMethods.clear();
   }
 
   if (isPatched) {
@@ -127,19 +146,34 @@ export function patchKernelMessages(): boolean {
     return true;
   }
 
-  // Store original for potential restoration
-  originalPutControlRequest = bridge.putControlRequest.bind(bridge);
+  // Patch each method
+  let patchedCount = 0;
+  for (const methodName of METHODS_TO_PATCH) {
+    const originalMethod = bridge[methodName];
+    if (typeof originalMethod !== "function") {
+      console.debug(`🔧 Method ${methodName} not found on bridge, skipping`);
+      continue;
+    }
 
-  // Install the patched version and store reference
-  const wrapper = async (request: unknown): Promise<unknown> => {
-    const patchedRequest = patchRequest(request);
-    return originalPutControlRequest!(patchedRequest);
-  };
-  patchedPutControlRequest = wrapper;
-  bridge.putControlRequest = wrapper;
+    // Store original for restoration
+    const boundOriginal = (originalMethod as (request: unknown) => Promise<unknown>).bind(bridge);
+    originalMethods.set(methodName, boundOriginal);
+
+    // Create and install wrapper
+    const wrapper = createPatchedMethod(methodName, boundOriginal);
+    patchedMethods.set(methodName, wrapper);
+    (bridge as Record<string, unknown>)[methodName] = wrapper;
+    patchedCount++;
+    console.debug(`🔧 Patched bridge method: ${methodName}`);
+  }
+
+  if (patchedCount === 0) {
+    console.warn("⚠️ No bridge methods were patched");
+    return false;
+  }
 
   isPatched = true;
-  console.log("✓ Kernel message patch installed");
+  console.log(`✓ Kernel message patch installed (${patchedCount} methods)`);
 
   return true;
 }
@@ -148,7 +182,7 @@ export function patchKernelMessages(): boolean {
  * Remove the kernel message patch and restore original behavior.
  */
 export function unpatchKernelMessages(): boolean {
-  if (!isPatched || !originalPutControlRequest) {
+  if (!isPatched || originalMethods.size === 0) {
     return false;
   }
 
@@ -159,11 +193,14 @@ export function unpatchKernelMessages(): boolean {
   const bridge = win._marimo_private_IslandsPyodideBridge;
 
   if (bridge) {
-    bridge.putControlRequest = originalPutControlRequest;
+    // Restore all original methods
+    for (const [methodName, original] of originalMethods) {
+      (bridge as Record<string, unknown>)[methodName] = original;
+    }
   }
 
-  originalPutControlRequest = null;
-  patchedPutControlRequest = null;
+  originalMethods.clear();
+  patchedMethods.clear();
   isPatched = false;
   console.log("✓ Kernel message patch removed");
 
