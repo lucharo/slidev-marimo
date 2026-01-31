@@ -1,0 +1,10 @@
+# Slidev presentation repo config
+
+# Simpler guidelines - let the agent figure out the details
+review_guidelines = """
+Slidev presentation with Vue components and marimo notebook islands.
+Visual/layout issues cannot be detected without rendering - focus on code correctness.
+"""
+
+review_reasoning = "standard"
+review_context_count = 3

@@ -151,6 +151,10 @@ onMounted(async () => {
     if (isMarimoInitialized()) {
       // Late-mounting component - create island directly
       island = createSingleIsland(registry, cellId.value);
+      // Fall back to findIsland if direct creation failed
+      if (!island) {
+        island = await findIsland(cellId.value);
+      }
     } else {
       // Island should have been created during initial batch
       island = await findIsland(cellId.value);
@@ -163,10 +167,13 @@ onMounted(async () => {
       return;
     }
 
+    // Store in const for type narrowing in async callbacks
+    const islandEl = island;
+
     console.log(`✓ Cell ${cellId.value}: found island element`);
 
     // Step 4: Watch for actual rendered content
-    const outputEl = island.querySelector("marimo-cell-output");
+    const outputEl = islandEl.querySelector("marimo-cell-output");
     if (outputEl) {
       contentObserver = new MutationObserver(() => {
         if (outputEl.children.length > 0) {
@@ -191,8 +198,8 @@ onMounted(async () => {
       const container = islandContainer.value;
 
       const syncPosition = () => {
-        if (!container || !island?.isConnected) return;
-        updateIslandPosition(island, container);
+        if (!container || !islandEl.isConnected) return;
+        updateIslandPosition(islandEl, container);
       };
 
       // Listen for window resize
@@ -205,22 +212,22 @@ onMounted(async () => {
         entries.forEach((entry) => {
           if (entry.isIntersecting) {
             syncPosition();
-            island!.style.display = "block";
-            island!.style.zIndex = "10";
+            islandEl.style.display = "block";
+            islandEl.style.zIndex = "10";
 
             // Sync container height with island height
             if (!resizeObserver) {
               resizeObserver = new ResizeObserver(() => {
-                if (!island?.isConnected) return;
-                const islandHeight = island.offsetHeight;
+                if (!islandEl.isConnected) return;
+                const islandHeight = islandEl.offsetHeight;
                 if (islandContainer.value && islandHeight > 0) {
                   islandContainer.value.style.height = `${islandHeight}px`;
                 }
               });
-              resizeObserver.observe(island!);
+              resizeObserver.observe(islandEl);
             }
 
-            const initialHeight = island!.offsetHeight;
+            const initialHeight = islandEl.offsetHeight;
             if (initialHeight > 0) {
               container.style.height = `${initialHeight}px`;
             } else {
@@ -229,7 +236,7 @@ onMounted(async () => {
 
             console.log(`✓ Cell ${cellId.value}: visible and positioned`);
           } else {
-            island!.style.display = "none";
+            islandEl.style.display = "none";
           }
         });
       });

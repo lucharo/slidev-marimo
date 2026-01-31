@@ -121,8 +121,8 @@ function setupLateArrivalWatcher(
   kernel: MarimoKernel,
   registry: CellRegistry
 ): void {
-  // Track cells we've seen to detect new ones
-  let knownCellCount = 0;
+  // Initialize from current count to avoid processing existing cells as "new"
+  let knownCellCount = registry.getCellCount();
 
   const checkForNewCells = () => {
     // Only process after marimo is initialized
@@ -150,5 +150,10 @@ function setupLateArrivalWatcher(
   };
 
   // Poll for new cells periodically
-  setInterval(checkForNewCells, 500);
+  const intervalId = setInterval(checkForNewCells, 500);
+
+  // Clean up interval when page unloads to prevent memory leaks
+  window.addEventListener("beforeunload", () => {
+    clearInterval(intervalId);
+  });
 }

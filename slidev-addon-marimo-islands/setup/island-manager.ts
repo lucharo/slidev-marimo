@@ -231,8 +231,9 @@ function setupKernelReadyListener(kernel: MarimoKernel): void {
   // Track polling interval so we can clear it when ready
   let pollingInterval: ReturnType<typeof setInterval> | null = null;
   let pollingTimeout: ReturnType<typeof setTimeout> | null = null;
+  let messageHandler: ((event: MessageEvent) => void) | null = null;
 
-  const stopPolling = () => {
+  const cleanup = () => {
     if (pollingInterval) {
       clearInterval(pollingInterval);
       pollingInterval = null;
@@ -241,10 +242,14 @@ function setupKernelReadyListener(kernel: MarimoKernel): void {
       clearTimeout(pollingTimeout);
       pollingTimeout = null;
     }
+    if (messageHandler) {
+      window.removeEventListener("message", messageHandler);
+      messageHandler = null;
+    }
   };
 
   // Marimo sends messages from its web worker
-  window.addEventListener("message", (event) => {
+  messageHandler = (event: MessageEvent) => {
     // Check for marimo kernel ready message
     // Use explicit parentheses for clarity on precedence
     if (
@@ -252,16 +257,17 @@ function setupKernelReadyListener(kernel: MarimoKernel): void {
       (event.data.type === "kernel-ready" ||
         (event.data.channel === "marimo" && event.data.type === "ready"))
     ) {
-      stopPolling();
+      cleanup();
       kernel.markReady();
     }
-  });
+  };
+  window.addEventListener("message", messageHandler);
 
   // Also watch for custom element registration as a backup
   // The marimo-island custom element is defined when the kernel is ready
   const checkCustomElement = () => {
     if (customElements.get("marimo-island")) {
-      stopPolling();
+      cleanup();
       kernel.markReady();
       return true;
     }
@@ -271,13 +277,11 @@ function setupKernelReadyListener(kernel: MarimoKernel): void {
   // Poll for custom element registration
   if (!checkCustomElement()) {
     pollingInterval = setInterval(() => {
-      if (checkCustomElement()) {
-        // checkCustomElement already calls stopPolling
-      }
+      checkCustomElement(); // Calls cleanup() internally when ready
     }, 100);
 
     // Stop polling after 60 seconds
-    pollingTimeout = setTimeout(stopPolling, 60000);
+    pollingTimeout = setTimeout(cleanup, 60000);
   }
 }
 
