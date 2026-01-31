@@ -146,9 +146,10 @@ export function createIslandElements(registry: CellRegistry): number {
     const output = document.createElement("marimo-cell-output");
 
     // Create code container (hidden, used by marimo internally)
+    // Marimo expects URL-encoded code in this element
     const code = document.createElement("marimo-cell-code");
     code.hidden = true;
-    code.textContent = cell.code;
+    code.textContent = encodeURIComponent(cell.code);
 
     island.appendChild(output);
     island.appendChild(code);
@@ -197,9 +198,10 @@ export function createSingleIsland(
   island.style.display = "none";
 
   const output = document.createElement("marimo-cell-output");
+  // Marimo expects URL-encoded code in this element
   const code = document.createElement("marimo-cell-code");
   code.hidden = true;
-  code.textContent = cell.code;
+  code.textContent = encodeURIComponent(cell.code);
 
   island.appendChild(output);
   island.appendChild(code);
@@ -400,4 +402,12 @@ export function cleanupMarimo(): void {
   resetMarimoState();
 
   console.log("✓ Marimo cleanup complete");
+}
+
+// HMR: Force full page reload when this file changes
+// Marimo kernel state cannot be hot-reloaded
+if (import.meta.hot) {
+  import.meta.hot.accept(() => {
+    import.meta.hot?.invalidate();
+  });
 }
