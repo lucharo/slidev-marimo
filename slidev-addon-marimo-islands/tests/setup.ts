@@ -5,14 +5,8 @@
 
 import { vi, afterEach } from 'vitest'
 
-// Mock Vue composition API
-vi.mock('vue', () => ({
-  ref: (initialValue) => ({ value: initialValue }),
-  computed: (fn) => ({ value: fn() }),
-  onMounted: (fn) => fn(),
-  onUnmounted: (fn) => fn(),
-  getCurrentInstance: () => ({ uid: 'test-123' })
-}))
+// Note: Vue mocks removed - tests use actual Vue reactive primitives
+// The new architecture uses reactive() and inject/provide which work in tests
 
 // Mock DOM
 Object.defineProperty(global, 'document', {
