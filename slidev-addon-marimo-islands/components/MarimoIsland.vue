@@ -135,45 +135,67 @@ async function findIsland(
 /**
  * Inject styles into marimo-slider shadow DOMs to fix Tailwind class issues.
  * Shadow DOM isolates styles, so Tailwind classes inside don't work without this.
+ * Uses CSS custom properties for theme compatibility.
  */
 function injectSliderStyles(container: HTMLElement) {
-  // Find all marimo-slider elements
   const sliders = container.querySelectorAll('marimo-slider');
   sliders.forEach((slider) => {
     const shadowRoot = (slider as HTMLElement).shadowRoot;
     if (shadowRoot && !shadowRoot.querySelector('#marimo-slider-fix')) {
       const style = document.createElement('style');
       style.id = 'marimo-slider-fix';
+      // Use CSS custom properties that inherit from document for theme support
       style.textContent = `
-        /* Fix slider track dimensions - Tailwind classes aren't working */
         [data-orientation="horizontal"] {
-          width: 144px !important;  /* w-36 = 9rem = 144px */
+          width: 144px !important;
           display: flex !important;
           align-items: center !important;
         }
         [data-testid="track"] {
           width: 100% !important;
           height: 8px !important;
-          background-color: #475569 !important;
+          background-color: var(--accent, #475569) !important;
           border-radius: 9999px !important;
         }
         [data-testid="range"] {
           height: 100% !important;
-          background-color: #28879f !important;
+          background-color: var(--primary, #28879f) !important;
           border-radius: 9999px !important;
         }
         [data-testid="thumb"] {
           width: 16px !important;
           height: 16px !important;
-          background-color: #1e293b !important;
-          border: 2px solid #28879f !important;
+          background-color: var(--background, #1e293b) !important;
+          border: 2px solid var(--primary, #28879f) !important;
           border-radius: 50% !important;
         }
       `;
       shadowRoot.appendChild(style);
-      console.debug('💉 Injected slider styles into shadow DOM');
     }
   });
+}
+
+/**
+ * Wait for slider shadow roots to be available, then inject styles.
+ * Polls with increasing intervals to handle variable render times.
+ */
+function waitForSliderShadowRoots(container: HTMLElement, maxAttempts = 10) {
+  let attempts = 0;
+  const check = () => {
+    const sliders = container.querySelectorAll('marimo-slider');
+    if (sliders.length === 0) return; // No sliders in this cell
+
+    const allHaveShadowRoots = Array.from(sliders).every(
+      (s) => (s as HTMLElement).shadowRoot
+    );
+    if (allHaveShadowRoots) {
+      injectSliderStyles(container);
+    } else if (attempts < maxAttempts) {
+      attempts++;
+      setTimeout(check, 500);
+    }
+  };
+  setTimeout(check, 500);
 }
 
 /**
@@ -297,12 +319,8 @@ onMounted(async () => {
       moveIslandToContainer(islandEl, outputContainer.value);
       console.log(`✓ Cell ${cellId.value}: positioned inline`);
 
-      // Step 6: Inject styles into slider shadow DOMs (delayed to let marimo render)
-      setTimeout(() => {
-        if (outputContainer.value) {
-          injectSliderStyles(outputContainer.value);
-        }
-      }, 2000);
+      // Step 6: Inject styles into slider shadow DOMs when available
+      waitForSliderShadowRoots(outputContainer.value);
     }
   } catch (err) {
     error.value = err instanceof Error ? err.message : "Unknown error";
