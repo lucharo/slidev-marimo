@@ -91,39 +91,23 @@ marimo-island input[type="range"] {
 
 /* ============================================
  * Marimo Slider Component Fixes
- * The slider uses Radix UI with Tailwind classes inside shadow DOM.
- * We need to ensure colors are visible in both light and dark modes.
+ * The slider uses Radix UI inside shadow DOM.
+ * We can only style the host element - shadow DOM internals
+ * are styled by marimo's bundled CSS.
  * ============================================ */
 
-/* Force slider track visibility - these target the Radix slider structure */
-marimo-slider [data-testid="track"] {
-  background-color: #cbd5e1 !important; /* slate-300 */
+/* Ensure the marimo-slider custom element has proper dimensions */
+marimo-slider {
+  display: block;
+  width: 100%;
+  min-width: 200px;
+  min-height: 24px;
 }
 
-marimo-slider [data-testid="range"] {
-  background-color: #3b82f6 !important; /* blue-500 */
-}
-
-marimo-slider [data-testid="thumb"] {
-  background-color: #ffffff !important;
-  border-color: #3b82f6 !important;
-}
-
-/* Dark mode slider styles */
-.dark marimo-slider [data-testid="track"],
-marimo-slider .dark [data-testid="track"] {
-  background-color: #475569 !important; /* slate-600 */
-}
-
-.dark marimo-slider [data-testid="range"],
-marimo-slider .dark [data-testid="range"] {
-  background-color: #60a5fa !important; /* blue-400 */
-}
-
-.dark marimo-slider [data-testid="thumb"],
-marimo-slider .dark [data-testid="thumb"] {
-  background-color: #334155 !important; /* slate-700 */
-  border-color: #60a5fa !important; /* blue-400 */
+/* Ensure marimo-ui-element wrapper doesn't constrain the slider */
+marimo-ui-element {
+  display: block;
+  width: 100%;
 }
 
 /* ============================================
