@@ -7,6 +7,7 @@
 
 /* ============================================
  * CSS Custom Properties for theming
+ * Values extracted from marimo's style.css to ensure compatibility
  * ============================================ */
 :root {
   /* Light mode defaults */
@@ -14,15 +15,35 @@
   --marimo-output-fg: inherit;
   --marimo-table-header-bg: rgba(0, 0, 0, 0.05);
   --marimo-table-border: rgba(0, 0, 0, 0.1);
+
+  /* Marimo UI component colors - EXACT values from marimo's CSS */
+  --primary: #0880ea;
+  --accent: #edf6ff;
+  --ring: #94a3b8;
+  --background: #fff;
+  --foreground: #0f172a;
+  --accent-foreground: #0f172a;
+
+  /* Enable light-dark() function support */
+  color-scheme: light dark;
 }
 
-/* Dark mode values - use Slidev's .dark class only to ensure theme matches
-   Slidev's setting rather than system preference */
+/* Dark mode values */
 .dark {
   --marimo-output-bg: var(--slidev-code-background, #1e1e1e);
   --marimo-output-fg: var(--slidev-code-foreground, #d4d4d4);
   --marimo-table-header-bg: rgba(255, 255, 255, 0.1);
   --marimo-table-border: rgba(255, 255, 255, 0.1);
+
+  /* Marimo UI component colors - EXACT dark mode values from marimo's CSS */
+  --primary: #28879f;
+  --accent: #1d5b6a;
+  --ring: #94a3b8;
+  --background: #181c1a;
+  --foreground: #eceeed;
+  --accent-foreground: #eceeed;
+
+  color-scheme: dark;
 }
 
 /* ============================================
@@ -66,6 +87,43 @@ marimo-island input[type="range"] {
   display: block;
   -webkit-appearance: auto;
   appearance: auto;
+}
+
+/* ============================================
+ * Marimo Slider Component Fixes
+ * The slider uses Radix UI with Tailwind classes inside shadow DOM.
+ * We need to ensure colors are visible in both light and dark modes.
+ * ============================================ */
+
+/* Force slider track visibility - these target the Radix slider structure */
+marimo-slider [data-testid="track"] {
+  background-color: #cbd5e1 !important; /* slate-300 */
+}
+
+marimo-slider [data-testid="range"] {
+  background-color: #3b82f6 !important; /* blue-500 */
+}
+
+marimo-slider [data-testid="thumb"] {
+  background-color: #ffffff !important;
+  border-color: #3b82f6 !important;
+}
+
+/* Dark mode slider styles */
+.dark marimo-slider [data-testid="track"],
+marimo-slider .dark [data-testid="track"] {
+  background-color: #475569 !important; /* slate-600 */
+}
+
+.dark marimo-slider [data-testid="range"],
+marimo-slider .dark [data-testid="range"] {
+  background-color: #60a5fa !important; /* blue-400 */
+}
+
+.dark marimo-slider [data-testid="thumb"],
+marimo-slider .dark [data-testid="thumb"] {
+  background-color: #334155 !important; /* slate-700 */
+  border-color: #60a5fa !important; /* blue-400 */
 }
 
 /* ============================================
