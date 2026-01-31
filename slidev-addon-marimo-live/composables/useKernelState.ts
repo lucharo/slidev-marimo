@@ -45,6 +45,8 @@ const variables = ref<VariableInfo[]>([]);
 // Global kernel state
 const isKernelReady = ref(false);
 const lastExecutionTime = ref<number>(0);
+// Version counter to trigger reactivity when notebook cells change
+const notebookCellsVersion = ref(0);
 
 /**
  * Create or get cell state
@@ -136,6 +138,9 @@ export function registerNotebookCells(
     }
   }
 
+  // Increment version to trigger reactive updates in components
+  notebookCellsVersion.value++;
+
   console.log(
     `[marimo-live] Registered ${cellIds.length} notebook cells:`,
     Array.from(notebookCellsByName.keys()),
@@ -224,6 +229,7 @@ export function useKernelState() {
     // Reactive state
     cellStates: readonly(cellStates) as ReadonlyMap<string, CellState>,
     notebookCells: readonly(notebookCells) as ReadonlyMap<string, NotebookCell>,
+    notebookCellsVersion: readonly(notebookCellsVersion),
     variables: readonly(variables),
     isKernelReady: readonly(isKernelReady),
     lastExecutionTime: readonly(lastExecutionTime),

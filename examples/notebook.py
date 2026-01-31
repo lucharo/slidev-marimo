@@ -124,7 +124,7 @@ def text_output(mo, text):
 
 @app.cell
 def greeting_input(mo):
-    """Text input for greeting with default marimonaut"""
+    """Text input for greeting"""
     name_input = mo.ui.text(value="marimonaut 🧑‍🚀", label="Enter your name")
     name_input
     return (name_input,)
@@ -132,8 +132,11 @@ def greeting_input(mo):
 
 @app.cell
 def greeting_output(mo, name_input):
-    """Display greeting"""
-    return mo.md(f"# Hello, {name_input.value}!")
+    """Display personalized greeting"""
+    # Use the UI element's value with a fallback
+    name = name_input.value if name_input.value else "World"
+    mo.md(f"# Hello, {name}!")
+    return
 
 
 if __name__ == "__main__":

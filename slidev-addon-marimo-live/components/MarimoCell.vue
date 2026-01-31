@@ -24,14 +24,21 @@
 import { computed } from "vue";
 import MarimoLive from "./MarimoLive.vue";
 
-const props = defineProps<{
-  /** Required: Cell name, ID, or index from the notebook */
-  cell: string;
-  /** Show the code editor (default: true) */
-  displayCode?: boolean;
-  /** Auto-execute on mount (default: true) */
-  autoRun?: boolean;
-}>();
+const props = withDefaults(
+  defineProps<{
+    /** Required: Cell name, ID, or index from the notebook */
+    cell: string;
+    /** Show the code editor (default: inherited from MarimoLive) */
+    displayCode?: boolean;
+    /** Auto-execute on mount (default: inherited from MarimoLive) */
+    autoRun?: boolean;
+  }>(),
+  {
+    // Use undefined to inherit MarimoLive's defaults
+    displayCode: undefined,
+    autoRun: undefined,
+  },
+);
 
 // Only include props that are explicitly set to avoid overriding MarimoLive defaults
 const boundProps = computed(() => {

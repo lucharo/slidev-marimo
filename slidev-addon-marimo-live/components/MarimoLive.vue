@@ -61,10 +61,11 @@ const props = withDefaults(
 const kernel = useMarimoKernel();
 
 // Resolve cell reference to notebook cell
-// Depend on isKernelReady to re-compute when notebook cells are registered
+// Depend on notebookCellsVersion which increments when cells are registered
 const notebookCell = computed(() => {
-  // Access isKernelReady to create reactive dependency
-  const ready = kernel.isKernelReady.value;
+  // Access notebookCellsVersion to create reactive dependency
+  // This triggers re-computation when registerNotebookCells() is called
+  const version = kernel.notebookCellsVersion?.value ?? 0;
 
   if (!props.cell) return null;
 
