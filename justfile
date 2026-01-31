@@ -11,11 +11,12 @@ clear-cache:
 # Restart slidev with fresh cache
 restart-slidev: clear-cache
     @echo "Killing existing slidev..."
-    pkill -f "slidev examples/marimo-live-test.md" 2>/dev/null || true
+    pkill -f "node.*slidev" 2>/dev/null || true
     sleep 1
     @echo "Starting slidev..."
-    (sleep 86400 | bun run slidev examples/marimo-live-test.md --port 3033) &
-    sleep 5
+    nohup bun run slidev examples/marimo-live-test.md --port 3033 > /dev/null 2>&1 &
+    @echo "Waiting for slidev to start..."
+    @timeout 30 sh -c 'until curl -s http://localhost:3033 > /dev/null 2>&1; do sleep 1; done' || echo "Warning: Slidev may not have started"
     @echo "Slidev running at http://localhost:3033"
 
 # Restart marimo kernel with sandbox
@@ -24,8 +25,9 @@ restart-kernel:
     lsof -i :2718 -t | xargs kill 2>/dev/null || true
     sleep 1
     @echo "Starting marimo kernel..."
-    (sleep 86400 | uv run marimo edit examples/notebook.py --sandbox --headless --port 2718 --no-token --allow-origins "*") &
-    sleep 8
+    nohup uv run marimo edit examples/notebook.py --sandbox --headless --port 2718 --no-token --allow-origins "*" > /dev/null 2>&1 &
+    @echo "Waiting for kernel to start..."
+    @timeout 30 sh -c 'until curl -s http://localhost:2718 > /dev/null 2>&1; do sleep 1; done' || echo "Warning: Kernel may not have started"
     @echo "Kernel running at http://localhost:2718"
 
 # Restart both kernel and slidev

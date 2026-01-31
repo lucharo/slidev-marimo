@@ -133,10 +133,9 @@ def greeting_input(mo):
 @app.cell
 def greeting_output(mo, name_input):
     """Display personalized greeting"""
-    # Use the UI element's value with a fallback
     name = name_input.value if name_input.value else "World"
     mo.md(f"# Hello, {name}!")
-    return
+    # No return value - display only, don't export variables
 
 
 if __name__ == "__main__":
