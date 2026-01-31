@@ -159,7 +159,7 @@ onMounted(async () => {
   try {
     // Step 1: Register this cell in the registry
     cellId.value = registry.registerCell(processedCode.value, true);
-    console.log(`📝 Cell ${cellId.value}: mounted, waiting for kernel...`);
+    console.debug(`📝 Cell ${cellId.value}: mounted, waiting for kernel...`);
 
     // Step 2: Wait for kernel to be ready
     await kernel.waitForReady();
@@ -285,9 +285,7 @@ onUnmounted(() => {
 // HMR: Force full page reload when this component changes
 // Marimo island state cannot be hot-reloaded
 if (import.meta.hot) {
-  import.meta.hot.accept(() => {
-    import.meta.hot?.invalidate();
-  });
+  import.meta.hot.decline();
 }
 </script>
 
@@ -404,7 +402,7 @@ if (import.meta.hot) {
 .output-container :deep(.marimo-run-button),
 .output-container :deep([data-testid="copy-button"]),
 .output-container :deep([data-testid="run-button"]) {
-  display: none !important;
+  display: none;
 }
 
 /* Clean up marimo output styling */

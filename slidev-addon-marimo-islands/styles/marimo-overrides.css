@@ -5,7 +5,37 @@
  * Hides unnecessary UI elements and provides clean presentation aesthetics.
  */
 
-/* Hide marimo's built-in UI controls globally */
+/* ============================================
+ * CSS Custom Properties for theming
+ * ============================================ */
+:root {
+  /* Light mode defaults */
+  --marimo-output-bg: var(--slidev-code-background, #f8f9fa);
+  --marimo-output-fg: inherit;
+  --marimo-table-header-bg: rgba(0, 0, 0, 0.05);
+  --marimo-table-border: rgba(0, 0, 0, 0.1);
+}
+
+/* Dark mode values - applies to both prefers-color-scheme and Slidev's .dark class */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --marimo-output-bg: var(--slidev-code-background, #1e1e1e);
+    --marimo-output-fg: var(--slidev-code-foreground, #d4d4d4);
+    --marimo-table-header-bg: rgba(255, 255, 255, 0.1);
+    --marimo-table-border: rgba(255, 255, 255, 0.1);
+  }
+}
+
+.dark {
+  --marimo-output-bg: var(--slidev-code-background, #1e1e1e);
+  --marimo-output-fg: var(--slidev-code-foreground, #d4d4d4);
+  --marimo-table-header-bg: rgba(255, 255, 255, 0.1);
+  --marimo-table-border: rgba(255, 255, 255, 0.1);
+}
+
+/* ============================================
+ * Hide marimo's built-in UI controls
+ * ============================================ */
 marimo-island .marimo-copy-button,
 marimo-island .marimo-run-button,
 marimo-island [data-testid="copy-button"],
@@ -15,13 +45,19 @@ marimo-island .cell-toolbar {
   display: none !important;
 }
 
-/* Override marimo's output styling for presentations */
+/* ============================================
+ * Output styling
+ * ============================================ */
 marimo-cell-output {
   font-size: inherit !important;
   font-family: inherit !important;
+  background: var(--marimo-output-bg);
+  color: var(--marimo-output-fg);
 }
 
-/* Ensure widgets and interactive elements display properly */
+/* ============================================
+ * Widget and interactive element sizing
+ * ============================================ */
 marimo-island .widget-container,
 marimo-island .marimo-slider,
 marimo-island .marimo-dropdown,
@@ -30,7 +66,9 @@ marimo-island .marimo-button {
   max-width: 100%;
 }
 
-/* Clean up table styling */
+/* ============================================
+ * Table styling
+ * ============================================ */
 marimo-island table {
   border-collapse: collapse;
   width: 100%;
@@ -41,15 +79,17 @@ marimo-island th,
 marimo-island td {
   padding: 0.5rem 1rem;
   text-align: left;
-  border: 1px solid rgba(0, 0, 0, 0.1);
+  border: 1px solid var(--marimo-table-border);
 }
 
 marimo-island th {
-  background: rgba(0, 0, 0, 0.05);
+  background: var(--marimo-table-header-bg);
   font-weight: 600;
 }
 
-/* Chart/plot containers */
+/* ============================================
+ * Chart/plot containers
+ * ============================================ */
 marimo-island .plotly-container,
 marimo-island .matplotlib-container,
 marimo-island .altair-container {
@@ -64,40 +104,14 @@ marimo-island pre {
   max-width: 100%;
 }
 
-/* Remove any unexpected margins from marimo internals */
+/* ============================================
+ * Margin reset for marimo internals
+ * ============================================ */
+/* Reset margins on all direct children to prevent marimo's internal
+ * components from adding unexpected spacing. This broad selector is
+ * intentional - marimo uses many different internal element types and
+ * we want consistent presentation layout regardless of output type. */
 marimo-island > * {
   margin-top: 0;
   margin-bottom: 0;
-}
-
-/* Dark mode support */
-@media (prefers-color-scheme: dark) {
-  marimo-cell-output {
-    background: var(--slidev-code-background, #1e1e1e);
-    color: var(--slidev-code-foreground, #d4d4d4);
-  }
-
-  marimo-island th {
-    background: rgba(255, 255, 255, 0.1);
-  }
-
-  marimo-island th,
-  marimo-island td {
-    border-color: rgba(255, 255, 255, 0.1);
-  }
-}
-
-/* Slidev dark class support */
-.dark marimo-cell-output {
-  background: var(--slidev-code-background, #1e1e1e);
-  color: var(--slidev-code-foreground, #d4d4d4);
-}
-
-.dark marimo-island th {
-  background: rgba(255, 255, 255, 0.1);
-}
-
-.dark marimo-island th,
-.dark marimo-island td {
-  border-color: rgba(255, 255, 255, 0.1);
 }

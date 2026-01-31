@@ -172,8 +172,5 @@ function setupLateArrivalWatcher(
 // HMR handling: Force full page reload when marimo-related files change
 // This is necessary because marimo's internal state can't be hot-reloaded
 if (import.meta.hot) {
-  import.meta.hot.accept(() => {
-    console.log("🔄 Marimo: HMR detected, reloading page...");
-    window.location.reload();
-  });
+  import.meta.hot.decline();
 }

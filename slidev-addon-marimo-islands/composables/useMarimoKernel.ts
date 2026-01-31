@@ -181,7 +181,5 @@ export function installMarimoKernel(app: App): MarimoKernel {
 // HMR: Force full page reload when this file changes
 // Marimo kernel state cannot be hot-reloaded
 if (import.meta.hot) {
-  import.meta.hot.accept(() => {
-    import.meta.hot?.invalidate();
-  });
+  import.meta.hot.decline();
 }
