@@ -176,22 +176,48 @@ onMounted(async () => {
     // Step 4: Watch for actual rendered content
     const outputEl = islandEl.querySelector("marimo-cell-output");
     if (outputEl) {
-      contentObserver = new MutationObserver(() => {
-        if (outputEl.children.length > 0) {
-          isLoading.value = false;
-          contentObserver?.disconnect();
-          contentObserver = null;
-          console.log(`✓ Cell ${cellId.value}: output rendered`);
-        }
-      });
-      contentObserver.observe(outputEl, { childList: true, subtree: true });
+      const checkForContent = () => {
+        // Check for any content (children, text, or shadow DOM content)
+        const hasContent =
+          outputEl.children.length > 0 ||
+          (outputEl.textContent?.trim().length ?? 0) > 0 ||
+          outputEl.shadowRoot?.children.length;
+        return hasContent;
+      };
 
-      // Check if content already exists
-      if (outputEl.children.length > 0) {
+      if (checkForContent()) {
         isLoading.value = false;
-        contentObserver.disconnect();
-        contentObserver = null;
+        console.log(`✓ Cell ${cellId.value}: output already rendered`);
+      } else {
+        contentObserver = new MutationObserver(() => {
+          if (checkForContent()) {
+            isLoading.value = false;
+            contentObserver?.disconnect();
+            contentObserver = null;
+            console.log(`✓ Cell ${cellId.value}: output rendered`);
+          }
+        });
+        contentObserver.observe(outputEl, {
+          childList: true,
+          subtree: true,
+          characterData: true,
+        });
+
+        // Fallback: hide spinner after 30 seconds regardless
+        setTimeout(() => {
+          if (isLoading.value) {
+            isLoading.value = false;
+            contentObserver?.disconnect();
+            contentObserver = null;
+            console.log(`⏰ Cell ${cellId.value}: spinner timeout, hiding loader`);
+          }
+        }, 30000);
       }
+    } else {
+      // No output element found, hide spinner after delay
+      setTimeout(() => {
+        isLoading.value = false;
+      }, 5000);
     }
 
     // Step 5: Set up positioning via IntersectionObserver
