@@ -90,11 +90,6 @@ function patchRequest(request: unknown): unknown {
  * Should be called after the marimo script has initialized the bridge.
  */
 export function patchKernelMessages(): boolean {
-  if (isPatched) {
-    console.debug("🔧 Kernel messages already patched");
-    return true;
-  }
-
   if (typeof window === "undefined") {
     console.warn("⚠️ Cannot patch kernel messages: not in browser");
     return false;
@@ -114,6 +109,21 @@ export function patchKernelMessages(): boolean {
   if (typeof bridge.putControlRequest !== "function") {
     console.warn("⚠️ Cannot patch kernel messages: putControlRequest not found");
     return false;
+  }
+
+  // Reset state if bridge was recreated (e.g., during HMR edge cases)
+  // This detects when we think we're patched but the bridge has a different function
+  if (isPatched && originalPutControlRequest && bridge.putControlRequest !== originalPutControlRequest) {
+    // Bridge was recreated, but current function isn't our wrapper - check if it's the original
+    // If the bridge.putControlRequest doesn't match our stored original, bridge was recreated
+    console.debug("🔧 Bridge recreated, resetting patch state");
+    isPatched = false;
+    originalPutControlRequest = null;
+  }
+
+  if (isPatched) {
+    console.debug("🔧 Kernel messages already patched");
+    return true;
   }
 
   // Store original for potential restoration

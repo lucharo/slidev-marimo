@@ -275,11 +275,20 @@ function loadMarimoScript(kernel: MarimoKernel): Promise<void> {
   });
 }
 
+// Track patch retry timeout for cancellation
+let patchRetryTimeout: ReturnType<typeof setTimeout> | null = null;
+
 /**
  * Apply the kernel message patch with retries.
  * The bridge may not be available immediately after kernel ready signal.
  */
 function applyKernelPatch(): void {
+  // Cancel any pending retry from previous initialization
+  if (patchRetryTimeout) {
+    clearTimeout(patchRetryTimeout);
+    patchRetryTimeout = null;
+  }
+
   let attempts = 0;
   const maxAttempts = 20;
   const retryInterval = 100;
@@ -288,13 +297,15 @@ function applyKernelPatch(): void {
     attempts++;
     if (patchKernelMessages()) {
       console.log("✓ Kernel message patch applied successfully");
+      patchRetryTimeout = null;
       return;
     }
 
     if (attempts < maxAttempts) {
-      setTimeout(tryPatch, retryInterval);
+      patchRetryTimeout = setTimeout(tryPatch, retryInterval);
     } else {
       console.warn("⚠️ Failed to apply kernel message patch after max attempts");
+      patchRetryTimeout = null;
     }
   };
 
