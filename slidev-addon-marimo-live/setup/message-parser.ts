@@ -11,7 +11,7 @@ export type OutputChannel = "output" | "console" | "media" | "stderr";
 export interface CellOutput {
   channel: OutputChannel;
   mimetype: string;
-  data: string;
+  data: string | unknown[];
   timestamp: number;
 }
 
@@ -190,13 +190,38 @@ export function isUIElementMessage(
 export function extractHtml(output: CellOutput | undefined): string | null {
   if (!output) return null;
 
+  // Normalize data to string (marimo sometimes sends arrays for error outputs)
+  const dataStr = typeof output.data === "string"
+    ? output.data
+    : JSON.stringify(output.data);
+
+  // Handle marimo error format
+  if (output.mimetype === "application/vnd.marimo+error") {
+    const errors = Array.isArray(output.data) ? output.data : [output.data];
+    const messages = errors.map(
+      (e: unknown) => {
+        const err = e as { type?: string; msg?: string; name?: string };
+        if (err.type === "multiple-defs") {
+          return `Multiple definitions: "${err.name}" is defined in multiple cells`;
+        }
+        return err.msg || err.type || String(e);
+      },
+    );
+    const escaped = messages
+      .join("\n")
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;");
+    return `<pre class="marimo-error">${escaped}</pre>`;
+  }
+
   if (output.mimetype === "text/html") {
-    return output.data;
+    return dataStr;
   }
 
   if (output.mimetype === "text/plain") {
     // Escape HTML and wrap in pre tag for plain text
-    const escaped = output.data
+    const escaped = dataStr
       .replace(/&/g, "&amp;")
       .replace(/</g, "&lt;")
       .replace(/>/g, "&gt;");
@@ -204,28 +229,28 @@ export function extractHtml(output: CellOutput | undefined): string | null {
   }
 
   if (output.mimetype === "image/png" || output.mimetype === "image/jpeg") {
-    return `<img src="data:${output.mimetype};base64,${output.data}" />`;
+    return `<img src="data:${output.mimetype};base64,${dataStr}" />`;
   }
 
   if (output.mimetype === "image/svg+xml") {
-    return output.data;
+    return dataStr;
   }
 
   if (output.mimetype === "application/json") {
     try {
-      const formatted = JSON.stringify(JSON.parse(output.data), null, 2);
+      const formatted = JSON.stringify(JSON.parse(dataStr), null, 2);
       return `<pre><code class="language-json">${formatted}</code></pre>`;
     } catch {
       // Invalid JSON - show as raw preformatted text
-      return `<pre>${output.data}</pre>`;
+      return `<pre>${dataStr}</pre>`;
     }
   }
 
   if (output.mimetype === "text/markdown") {
     // Return markdown wrapped in a container for the renderer to handle
-    return `<div class="markdown-content">${output.data}</div>`;
+    return `<div class="markdown-content">${dataStr}</div>`;
   }
 
   // Unknown mimetype - show as preformatted text
-  return `<pre>${output.data}</pre>`;
+  return `<pre>${dataStr}</pre>`;
 }

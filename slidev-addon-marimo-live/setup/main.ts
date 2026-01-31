@@ -60,7 +60,7 @@ export default ({ app }) => {
     .catch((err) => {
       console.error("[marimo-live] Failed to connect:", err);
       console.log(
-        "[marimo-live] Make sure marimo is running: marimo edit notebook.py --headless --port 2718 --no-token --allow-origins '*'",
+        "[marimo-live] Make sure marimo is running: marimo edit notebook.py --headless --port 2718 --no-token --no-skew-protection --allow-origins '*'",
       );
     });
 

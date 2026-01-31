@@ -26,7 +26,8 @@ const consoleOutput = computed(() => {
   return props.console
     .map((c) => {
       const prefix = c.channel === "stderr" ? "[stderr] " : "";
-      return `${prefix}${c.data}`;
+      const data = typeof c.data === "string" ? c.data : JSON.stringify(c.data);
+      return `${prefix}${data}`;
     })
     .join("\n");
 });

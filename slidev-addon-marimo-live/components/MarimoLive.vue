@@ -457,12 +457,12 @@ function handleKeydown(event: KeyboardEvent) {
   width: 3rem;
   padding-right: 1rem;
   text-align: right;
-  color: #6b7280;
+  color: #9ca3af;
   user-select: none;
 }
 
 .line-content {
-  color: #e5e7eb;
+  color: #f9fafb;
 }
 
 /* Output container */

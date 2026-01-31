@@ -121,14 +121,50 @@ export function createKernelConnection(
       // Notify all message handlers
       messageHandlers.forEach((h) => h(msg));
 
-      // Route to specific handlers
+      // Route to specific handlers (normalize snake_case from server to camelCase)
       switch (msg.op) {
-        case "cell-op":
-          cellOpHandlers.forEach((h) => h(msg.data as CellOpData));
+        case "cell-op": {
+          const raw = msg.data as Record<string, unknown>;
+          const cellOp: CellOpData = {
+            cellId: (raw.cell_id || raw.cellId) as string,
+            output: raw.output as CellOpData["output"],
+            console: raw.console
+              ? Array.isArray(raw.console)
+                ? (raw.console as CellOpData["console"])
+                : [raw.console as NonNullable<CellOpData["console"]>[number]]
+              : undefined,
+            status: raw.status as CellOpData["status"],
+            staleInputs: (raw.stale_inputs ?? raw.staleInputs) as
+              | boolean
+              | undefined,
+            interrupted: raw.interrupted as boolean | undefined,
+          };
+          cellOpHandlers.forEach((h) => h(cellOp));
           break;
-        case "kernel-ready":
-          kernelReadyHandlers.forEach((h) => h(msg.data as KernelReadyData));
+        }
+        case "kernel-ready": {
+          const rawKr = msg.data as Record<string, unknown>;
+          const kernelReady: KernelReadyData = {
+            cellIds: (rawKr.cell_ids || rawKr.cellIds) as string[],
+            codes: rawKr.codes as string[],
+            names: rawKr.names as string[],
+            configs: rawKr.configs as KernelReadyData["configs"],
+            resumed: rawKr.resumed as boolean,
+            uiValues: (rawKr.ui_values || rawKr.uiValues) as Record<
+              string,
+              unknown
+            >,
+            lastExecutedCode: (rawKr.last_executed_code ||
+              rawKr.lastExecutedCode) as Record<string, string>,
+            lastCellExecutionTime: (rawKr.last_cell_execution_time ||
+              rawKr.lastCellExecutionTime) as Record<string, number>,
+            appConfig: (rawKr.app_config || rawKr.appConfig) as
+              | KernelReadyData["appConfig"]
+              | undefined,
+          };
+          kernelReadyHandlers.forEach((h) => h(kernelReady));
           break;
+        }
         case "variables":
           variablesHandlers.forEach((h) => h(msg.data as VariablesData));
           break;

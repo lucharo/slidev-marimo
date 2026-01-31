@@ -122,4 +122,5 @@ exec marimo edit "$NOTEBOOK" \
     --headless \
     --port "$PORT" \
     --no-token \
+    --no-skew-protection \
     --allow-origins "*"
