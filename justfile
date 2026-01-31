@@ -19,12 +19,12 @@ restart-slidev: clear-cache
     @timeout 30 sh -c 'until curl -s http://localhost:3033 > /dev/null 2>&1; do sleep 1; done' || echo "Warning: Slidev may not have started"
     @echo "Slidev running at http://localhost:3033"
 
-# Restart marimo kernel with sandbox
+# Restart marimo kernel with sandbox (edit mode for cell access)
 restart-kernel:
     @echo "Killing existing kernel..."
     lsof -i :2718 -t | xargs kill 2>/dev/null || true
     sleep 1
-    @echo "Starting marimo kernel..."
+    @echo "Starting marimo kernel (edit mode)..."
     nohup uv run marimo edit examples/notebook.py --sandbox --headless --port 2718 --no-token --allow-origins "*" > /dev/null 2>&1 &
     @echo "Waiting for kernel to start..."
     @timeout 30 sh -c 'until curl -s http://localhost:2718 > /dev/null 2>&1; do sleep 1; done' || echo "Warning: Kernel may not have started"

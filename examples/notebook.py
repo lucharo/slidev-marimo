@@ -50,10 +50,11 @@ def slider_demo(mo):
 def slider_output(mo, slider):
     """Show slider value with calculation"""
     squared = slider.value ** 2
-    return mo.md(f"""
+    mo.md(f"""
 **Value:** {slider.value}
 **Squared:** {squared}
 """)
+    # No return - display only
 
 
 @app.cell
@@ -105,7 +106,8 @@ def checkbox_demo(mo):
 @app.cell
 def checkbox_output(mo, check, switch):
     """Show checkbox/switch state"""
-    return mo.md(f"Checkbox: **{check.value}** | Switch: **{switch.value}**")
+    mo.md(f"Checkbox: **{check.value}** | Switch: **{switch.value}**")
+    # No return - display only
 
 
 @app.cell
@@ -119,7 +121,9 @@ def text_input_demo(mo):
 @app.cell
 def text_output(mo, text):
     """Greet the user"""
-    return mo.md(f"Hello, **{text.value}**!" if text.value else "_Enter your name above_")
+    msg = f"Hello, **{text.value}**!" if text.value else "_Enter your name above_"
+    mo.md(msg)
+    # No return - display only
 
 
 @app.cell
