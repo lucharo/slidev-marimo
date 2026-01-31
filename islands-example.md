@@ -48,7 +48,7 @@ Draw your data, see it plotted! Built with [wigglystuff](https://github.com/koan
 <div class="grid grid-cols-2 gap-8">
 <div>
 
-```marimo hideLines=1,2
+```marimo
 import micropip
 await micropip.install(['drawdata']);
 from drawdata import ScatterWidget
@@ -80,7 +80,10 @@ else:
 
 Using marimo's built-in dataframe explorer - try sorting by clicking column headers!
 
-```marimo
+<div class="grid grid-cols-5 gap-8">
+<div class="col-span-2">
+
+```marimo displayOutput=false
 import pandas as pd
 data = pd.DataFrame({
   "a": [1, 4, 2, 8, 5],
@@ -88,6 +91,21 @@ data = pd.DataFrame({
 })
 data
 ```
+
+</div>
+<div class="col-span-3">
+
+```marimo displayCode=false
+import pandas as pd
+data = pd.DataFrame({
+  "a": [1, 4, 2, 8, 5],
+  "b": [-1,2,-3,-4,10]
+})
+data
+```
+
+</div>
+</div>
 
 ---
 

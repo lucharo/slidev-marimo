@@ -38,11 +38,13 @@ const props = withDefaults(
   defineProps<{
     code: string;
     displayCode?: boolean;
+    displayOutput?: boolean;
     hideLines?: number | number[];
     codePosition?: "top" | "bottom";
   }>(),
   {
     displayCode: true,
+    displayOutput: true,
     hideLines: () => [],
     codePosition: "top",
   },
@@ -409,7 +411,7 @@ if (import.meta.hot) {
     </div>
 
     <!-- Output container - marimo island will be moved HERE for inline flow -->
-    <div ref="outputContainer" class="output-container"></div>
+    <div v-show="displayOutput" ref="outputContainer" class="output-container"></div>
 
     <!-- Code display (bottom position) -->
     <div v-if="displayCode && !error && codePosition === 'bottom'" class="code-block">
