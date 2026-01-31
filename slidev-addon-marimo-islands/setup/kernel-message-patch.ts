@@ -41,9 +41,13 @@ const METHODS_TO_PATCH = ["putControlRequest", "sendComponentValues"];
 /**
  * Determine the message type based on the request structure.
  * Maps request shapes to their expected type discriminator values.
+ *
+ * Handles multiple message shapes used by different bridge methods:
+ * - putControlRequest: control requests with objectIds/values
+ * - sendComponentValues: component value updates (may use different field names)
  */
 function inferMessageType(request: ControlRequest): string | null {
-  // UI element value update: has objectIds and values arrays
+  // UI element value update: has objectIds and values arrays (putControlRequest style)
   if (
     Array.isArray(request.objectIds) &&
     Array.isArray(request.values)
@@ -51,8 +55,20 @@ function inferMessageType(request: ControlRequest): string | null {
     return "update-ui-element";
   }
 
-  // Add more type mappings as needed for other message types
-  // e.g., function calls, code completion, etc.
+  // Component values update: singular object_id with value (sendComponentValues style)
+  if ("object_id" in request && "value" in request) {
+    return "update-ui-element";
+  }
+
+  // Batch component values: array of updates
+  if (Array.isArray(request.updates)) {
+    return "update-ui-element";
+  }
+
+  // Generic values payload (fallback for sendComponentValues)
+  if ("values" in request && !("objectIds" in request)) {
+    return "update-ui-element";
+  }
 
   return null;
 }
@@ -127,11 +143,13 @@ export function patchKernelMessages(): boolean {
     return false;
   }
 
-  // Check if any patched method no longer matches (bridge was recreated)
+  // Check if bridge was recreated or new methods became available
   const bridgeRecreated = isPatched && METHODS_TO_PATCH.some((method) => {
     const patched = patchedMethods.get(method);
-    const current = bridge[method] as ((request: unknown) => Promise<unknown>) | undefined;
-    return patched && current !== patched;
+    const current = bridge[method];
+    // Recreated if: our wrapper was replaced, OR a method appeared that wasn't there before
+    return (patched && current !== patched) ||
+           (!patched && typeof current === "function");
   });
 
   if (bridgeRecreated) {
