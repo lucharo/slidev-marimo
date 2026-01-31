@@ -150,10 +150,13 @@ function setupLateArrivalWatcher(
   };
 
   // Poll for new cells periodically
+  // Note: In SPA navigation, interval continues but exits early if marimo
+  // isn't initialized. This is acceptable overhead vs. complex route tracking.
   const intervalId = setInterval(checkForNewCells, 500);
 
   // Clean up interval when page unloads to prevent memory leaks
+  // Use { once: true } to prevent listener accumulation during HMR
   window.addEventListener("beforeunload", () => {
     clearInterval(intervalId);
-  });
+  }, { once: true });
 }

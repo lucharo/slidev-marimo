@@ -153,6 +153,7 @@ onMounted(async () => {
       island = createSingleIsland(registry, cellId.value);
       // Fall back to findIsland if direct creation failed
       if (!island) {
+        console.debug(`⚠️ Cell ${cellId.value}: createSingleIsland failed, falling back to findIsland`);
         island = await findIsland(cellId.value);
       }
     } else {
