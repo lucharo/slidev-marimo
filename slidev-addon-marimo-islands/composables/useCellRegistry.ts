@@ -176,3 +176,11 @@ export function installCellRegistry(app: App): CellRegistry {
   app.provide(CELL_REGISTRY_KEY, registry);
   return registry;
 }
+
+// HMR: Force full page reload when this file changes
+// Cell registry state cannot be hot-reloaded
+if (import.meta.hot) {
+  import.meta.hot.accept(() => {
+    import.meta.hot?.invalidate();
+  });
+}

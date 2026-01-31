@@ -177,3 +177,11 @@ export function installMarimoKernel(app: App): MarimoKernel {
   app.provide(MARIMO_KERNEL_KEY, kernel);
   return kernel;
 }
+
+// HMR: Force full page reload when this file changes
+// Marimo kernel state cannot be hot-reloaded
+if (import.meta.hot) {
+  import.meta.hot.accept(() => {
+    import.meta.hot?.invalidate();
+  });
+}
