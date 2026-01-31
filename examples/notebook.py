@@ -122,10 +122,7 @@ def text_input_demo(mo):
 @app.cell
 def text_output(mo, text):
     """Greet the user"""
-    if text.value:
-        mo.md(f"Hello, **{text.value}**!")
-    else:
-        mo.md("_Enter your name above_")
+    mo.md(f"Hello, **{text.value}**!" if text.value else "_Enter your name above_")
     return
 
 
