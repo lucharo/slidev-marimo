@@ -22,7 +22,6 @@ slider
 ```
 
 ```marimo-live
-import marimo as mo
 squared = slider.value ** 2
 mo.md(f"**Value:** {slider.value} | **Squared:** {squared}")
 ```
@@ -48,7 +47,6 @@ titanic.head()
 Select a column to visualize.
 
 ```marimo-live
-import marimo as mo
 dropdown = mo.ui.dropdown(
     options=["Survived", "Pclass", "Sex", "Age", "Fare"],
     value="Survived",
@@ -58,7 +56,6 @@ dropdown
 ```
 
 ```marimo-live
-import marimo as mo
 import altair as alt
 
 col = dropdown.value or "Survived"
@@ -82,7 +79,6 @@ mo.ui.altair_chart(chart)
 Browse and filter the Titanic dataset interactively.
 
 ```marimo-live
-import marimo as mo
 mo.ui.dataframe(titanic)
 ```
 
@@ -93,14 +89,12 @@ mo.ui.dataframe(titanic)
 Toggle states that react immediately.
 
 ```marimo-live
-import marimo as mo
 check = mo.ui.checkbox(label="Enable feature")
 switch = mo.ui.switch(label="Dark mode")
 mo.hstack([check, switch])
 ```
 
 ```marimo-live
-import marimo as mo
 mo.md(f"Checkbox: **{check.value}** | Switch: **{switch.value}**")
 ```
 
@@ -111,17 +105,12 @@ mo.md(f"Checkbox: **{check.value}** | Switch: **{switch.value}**")
 Type your name and see a greeting.
 
 ```marimo-live
-import marimo as mo
 text = mo.ui.text(placeholder="Type something...", label="Name")
 text
 ```
 
 ```marimo-live
-import marimo as mo
-if text.value:
-    mo.md(f"# Hello, {text.value}!")
-else:
-    mo.md("_Enter your name above_")
+mo.md(f"# Hello, {text.value}!" if text.value else "_Enter your name above_")
 ```
 
 ---
