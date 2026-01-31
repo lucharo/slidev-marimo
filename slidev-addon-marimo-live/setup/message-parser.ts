@@ -190,29 +190,37 @@ export function isUIElementMessage(
 export function extractHtml(output: CellOutput | undefined): string | null {
   if (!output) return null;
 
-  // Normalize data to string (marimo sometimes sends arrays for error outputs)
-  const dataStr = typeof output.data === "string"
-    ? output.data
-    : JSON.stringify(output.data);
+  // Normalize data to string (marimo sends arrays for error outputs)
+  // For non-string data, validate it's a simple array before stringifying
+  let dataStr: string;
+  if (typeof output.data === "string") {
+    dataStr = output.data;
+  } else if (Array.isArray(output.data)) {
+    // Array data is expected for error mimetypes - stringify for fallback display
+    dataStr = output.data.map((item) => String(item)).join("\n");
+  } else {
+    // Unexpected type - convert safely
+    dataStr = String(output.data);
+  }
 
   // Handle marimo error format
   if (output.mimetype === "application/vnd.marimo+error") {
     const errors = Array.isArray(output.data) ? output.data : [output.data];
-    const messages = errors.map(
-      (e: unknown) => {
-        const err = e as { type?: string; msg?: string; name?: string };
-        if (err.type === "multiple-defs") {
-          return `Multiple definitions: "${err.name}" is defined in multiple cells`;
-        }
-        return err.msg || err.type || String(e);
-      },
-    );
-    const escaped = messages
-      .join("\n")
-      .replace(/&/g, "&amp;")
-      .replace(/</g, "&lt;")
-      .replace(/>/g, "&gt;");
-    return `<pre class="marimo-error">${escaped}</pre>`;
+    const messages = errors.map((e: unknown) => {
+      const err = e as { type?: string; msg?: string; name?: string };
+      let msg: string;
+      if (err.type === "multiple-defs") {
+        msg = `Multiple definitions: "${err.name}" is defined in multiple cells`;
+      } else {
+        msg = err.msg || err.type || String(e);
+      }
+      // Escape each message individually to prevent XSS
+      return msg
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;");
+    });
+    return `<pre class="marimo-error">${messages.join("\n")}</pre>`;
   }
 
   if (output.mimetype === "text/html") {

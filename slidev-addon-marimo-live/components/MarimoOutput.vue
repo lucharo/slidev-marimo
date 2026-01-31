@@ -21,6 +21,7 @@ const htmlContent = computed(() => {
   return extractHtml(props.output);
 });
 
+// Console array is normalized by kernel-connection.ts; this handles data field rendering
 const consoleOutput = computed(() => {
   if (!props.console || props.console.length === 0) return null;
   return props.console
