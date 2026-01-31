@@ -15,11 +15,9 @@ Interactive Python notebooks embedded in your slides
 
 Drag the slider and watch the output update in real-time.
 
-```marimo-live cell=slider_demo
-```
+<MarimoCell cell="slider_demo" />
 
-```marimo-live cell=slider_output
-```
+<MarimoCell cell="slider_output" />
 
 ---
 
@@ -27,8 +25,7 @@ Drag the slider and watch the output update in real-time.
 
 First, let's load the Titanic dataset (shared across slides).
 
-```marimo-live cell=load_titanic
-```
+<MarimoCell cell="load_titanic" />
 
 ---
 
@@ -36,11 +33,9 @@ First, let's load the Titanic dataset (shared across slides).
 
 Select a column to visualize.
 
-```marimo-live cell=dropdown_demo
-```
+<MarimoCell cell="dropdown_demo" />
 
-```marimo-live cell=chart_demo
-```
+<MarimoCell cell="chart_demo" />
 
 ---
 
@@ -48,8 +43,7 @@ Select a column to visualize.
 
 Browse and filter the Titanic dataset interactively.
 
-```marimo-live cell=data_explorer_demo
-```
+<MarimoCell cell="data_explorer_demo" />
 
 ---
 
@@ -57,11 +51,9 @@ Browse and filter the Titanic dataset interactively.
 
 Toggle states that react immediately.
 
-```marimo-live cell=checkbox_demo
-```
+<MarimoCell cell="checkbox_demo" />
 
-```marimo-live cell=checkbox_output
-```
+<MarimoCell cell="checkbox_output" />
 
 ---
 
@@ -69,11 +61,9 @@ Toggle states that react immediately.
 
 Type your name and see a greeting.
 
-```marimo-live cell=text_input_demo
-```
+<MarimoCell cell="text_input_demo" />
 
-```marimo-live cell=text_output
-```
+<MarimoCell cell="text_output" />
 
 ---
 
@@ -103,12 +93,12 @@ marimo edit notebook.py --sandbox --headless --port 2718 --no-token --allow-orig
 slidev slides.md
 ```
 
-Reference cells by name:
+Reference cells with the `<MarimoCell>` component:
 
-~~~markdown
-```marimo-live cell=plot_chart
+```markdown
+<MarimoCell cell="plot_chart" />
+<MarimoCell cell="2" :displayCode="false" />
 ```
-~~~
 
 ---
 

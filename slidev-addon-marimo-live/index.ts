@@ -15,6 +15,9 @@
 // Main component for live cells
 export { default as MarimoLive } from "./components/MarimoLive.vue";
 
+// Semantic alias for cell references
+export { default as MarimoCell } from "./components/MarimoCell.vue";
+
 // Output renderer component
 export { default as MarimoOutput } from "./components/MarimoOutput.vue";
 

@@ -53,37 +53,28 @@ For sandbox mode, add a PEP 723 header to your notebook:
 ---
 # My Slide
 
-```marimo-live
-import pandas as pd
-import numpy as np
-
-df = pd.DataFrame({
-    'x': np.random.randn(100),
-    'y': np.random.randn(100)
-})
-df.describe()
-```
+<MarimoCell cell="plot_chart" />
 ---
 ```
 
 ## Usage
 
-### Referencing Notebook Cells (Recommended)
+### Referencing Notebook Cells
 
-The best way to use marimo-live is to reference cells from your marimo notebook. This keeps your code in one place with full IDE support.
+Use `<MarimoCell>` to embed cells from your notebook:
 
 ```markdown
-# Reference by cell name (function name in marimo)
-```marimo-live cell=plot_chart
-```
+<!-- Reference by cell name (function name in marimo) -->
+<MarimoCell cell="plot_chart" />
 
-# Reference by index (0-based)
-```marimo-live cell=2
-```
+<!-- Reference by index (0-based) -->
+<MarimoCell cell="2" />
 
-# With options
-```marimo-live cell=plot_chart displayCode=false
-```
+<!-- Hide code display -->
+<MarimoCell cell="chart_demo" :displayCode="false" />
+
+<!-- Disable auto-run -->
+<MarimoCell cell="expensive_computation" :autoRun="false" />
 ```
 
 Cell names come from the function names in your marimo notebook:
@@ -97,48 +88,26 @@ def plot_chart():  # <- This becomes the cell name
     return plt.gcf()
 ```
 
-### Inline Code (Alternative)
+### MarimoCell Props
 
-You can also write code directly in the slides, but this is less recommended:
-
-```markdown
-```marimo-live
-import pandas as pd
-df = pd.read_csv('data.csv')
-df.head()
-```
-```
-
-### Supported Flags
-
-| Flag | Default | Description |
+| Prop | Default | Description |
 |------|---------|-------------|
-| `cell` | - | Reference a notebook cell by name, ID, or index |
+| `cell` | required | Cell name, ID, or index from the notebook |
 | `displayCode` | `true` | Show the code editor |
 | `autoRun` | `true` | Auto-execute on slide load |
-| `codePosition` | `bottom` | Position of code: `top` or `bottom` |
-| `cellId` | auto | Custom cell ID (only for inline code) |
-| `hideLines` | `[]` | Line numbers to hide (e.g., `[1,2,3]`) |
 
-Example with flags:
+### Vue Component (Advanced)
 
-```markdown
-```marimo-live cell=data_viz displayCode=false autoRun=true
-```
-```
-
-### Vue Component
-
-You can also use the component directly:
+You can also use the components directly in Vue:
 
 ```vue
 <template>
-  <!-- Reference a notebook cell -->
-  <MarimoLive cell="plot_chart" />
+  <!-- Recommended: MarimoCell for notebook cells -->
+  <MarimoCell cell="plot_chart" />
 
-  <!-- Or use inline code -->
+  <!-- MarimoLive for more options -->
   <MarimoLive
-    :code="code"
+    cell="plot_chart"
     :display-code="true"
     :auto-run="true"
     code-position="top"
@@ -146,15 +115,21 @@ You can also use the component directly:
 </template>
 
 <script setup>
-import { MarimoLive } from 'slidev-marimo-live'
-
-const code = `
-import pandas as pd
-df = pd.read_csv('data.csv')
-df.head()
-`
+import { MarimoCell, MarimoLive } from 'slidev-marimo-live'
 </script>
 ```
+
+### MarimoLive Props (Advanced)
+
+| Prop | Default | Description |
+|------|---------|-------------|
+| `cell` | - | Reference a notebook cell by name, ID, or index |
+| `code` | - | Inline Python code (only if `cell` not provided) |
+| `displayCode` | `true` | Show the code editor |
+| `autoRun` | `true` | Auto-execute on slide load |
+| `codePosition` | `bottom` | Position of code: `top` or `bottom` |
+| `cellId` | auto | Custom cell ID (only for inline code) |
+| `hideLines` | `[]` | Line numbers to hide (e.g., `[1,2,3]`) |
 
 ## Configuration
 
@@ -193,7 +168,7 @@ if (typeof window !== 'undefined') {
 │                   SLIDEV PRESENTATION                    │
 │                                                          │
 │  ┌────────────────────────────────────────────────────┐ │
-│  │                 MarimoLive.vue                      │ │
+│  │           MarimoCell / MarimoLive.vue              │ │
 │  │  - Read-only code display                          │ │
 │  │  - Run button / keyboard shortcuts                 │ │
 │  │  - Output rendering                                │ │

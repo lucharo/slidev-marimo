@@ -1,29 +1,19 @@
 /**
  * Preparser for marimo-live code blocks
  *
- * Transforms markdown code blocks with 'marimo-live' language tag into <MarimoLive> components
+ * Transforms markdown code blocks with 'marimo-live' language tag into <MarimoLive> components.
+ * This is only for INLINE CODE - not recommended. Use <MarimoCell> component instead.
  *
- * Example 1: Reference a notebook cell by name
- * ```marimo-live cell=plot_chart
- * ```
- *
- * Example 2: Reference a notebook cell by index
- * ```marimo-live cell=2
- * ```
- *
- * Example 3: Inline code (less recommended)
+ * Example: Inline code (not recommended - prefer <MarimoCell> component)
  * ```marimo-live
  * import pandas as pd
  * df = pd.read_csv('data.csv')
  * df.head()
  * ```
  *
- * Supported flags:
- * - cell=name: Reference a notebook cell by name, ID, or index
- * - displayCode=false: Hide the code editor
- * - autoRun=true: Run code automatically on mount
- * - codePosition=top: Show code above output
- * - cellId=my_cell: Use a specific cell ID (only with inline code)
+ * For referencing notebook cells, use the <MarimoCell> component syntax:
+ * <MarimoCell cell="plot_chart" />
+ * <MarimoCell cell="2" :displayCode="false" />
  */
 
 import { definePreparserSetup } from "@slidev/types";
@@ -55,7 +45,7 @@ export default definePreparserSetup(() => {
             // i now points to the closing ```, skip it
             i++;
 
-            // Parse flags first to check for cell reference
+            // Parse flags
             const flags: Record<string, string> = {};
             if (flagsString.trim()) {
               const flagMatches = flagsString.match(/(\w+)=([^\s]+)/g) || [];
@@ -65,34 +55,20 @@ export default definePreparserSetup(() => {
               });
             }
 
-            // Build component tag
-            let componentTag = "<MarimoLive";
-
-            // If cell reference is provided, use it instead of inline code
-            if (flags.cell) {
-              componentTag += ` cell="${flags.cell}"`;
-
-              // If there's also inline code, include it as fallback
-              const code = codeLines.join("\n").trimEnd();
-              if (code) {
-                const escapedCode = code
-                  .replace(/"/g, "&quot;")
-                  .replace(/\n/g, "&#10;");
-                componentTag += ` code="${escapedCode}"`;
-              }
-            } else {
-              // No cell reference - use inline code
-              const code = codeLines.join("\n").trimEnd();
-              const escapedCode = code
-                .replace(/"/g, "&quot;")
-                .replace(/\n/g, "&#10;");
-              componentTag += ` code="${escapedCode}"`;
+            // Build component tag - inline code only
+            const code = codeLines.join("\n").trimEnd();
+            if (!code) {
+              // Empty code block - skip it
+              continue;
             }
 
-            // Add other flags
-            for (const [key, value] of Object.entries(flags)) {
-              if (key === "cell") continue; // Already handled
+            const escapedCode = code
+              .replace(/"/g, "&quot;")
+              .replace(/\n/g, "&#10;");
+            let componentTag = `<MarimoLive code="${escapedCode}"`;
 
+            // Add flags
+            for (const [key, value] of Object.entries(flags)) {
               if (value === "true" || value === "false") {
                 componentTag += ` :${key}="${value}"`;
               } else if (key === "hideLines") {
