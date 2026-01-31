@@ -135,11 +135,20 @@ export function createIslandElements(registry: CellRegistry): number {
     }
 
     // Create the marimo-island element structure
-    const island = document.createElement("marimo-island");
-    island.setAttribute("data-app-id", "slidev-app");
-    island.setAttribute("data-cell-id", cell.id);
-    island.setAttribute("data-cell-idx", String(idx));
-    island.setAttribute("data-reactive", String(cell.reactive));
+    // Use try-catch in case custom element is already defined
+    let island: HTMLElement;
+    try {
+      island = document.createElement("marimo-island");
+      island.setAttribute("data-app-id", "slidev-app");
+      island.setAttribute("data-cell-id", cell.id);
+      island.setAttribute("data-cell-idx", String(idx));
+      island.setAttribute("data-reactive", String(cell.reactive));
+    } catch {
+      // Fallback: create via template when custom element constructor conflicts
+      const template = document.createElement("template");
+      template.innerHTML = `<marimo-island data-app-id="slidev-app" data-cell-id="${cell.id}" data-cell-idx="${idx}" data-reactive="${cell.reactive}"></marimo-island>`;
+      island = template.content.firstElementChild as HTMLElement;
+    }
     island.style.display = "none"; // Hidden until positioned by component
 
     // Create output container
@@ -192,11 +201,21 @@ export function createSingleIsland(
 
   const idx = registry.getCellCount();
 
-  const island = document.createElement("marimo-island");
-  island.setAttribute("data-app-id", "slidev-app");
-  island.setAttribute("data-cell-id", cell.id);
-  island.setAttribute("data-cell-idx", String(idx));
-  island.setAttribute("data-reactive", String(cell.reactive));
+  // Create island element - use innerHTML as fallback if createElement fails
+  // (can happen when marimo has already defined the custom element)
+  let island: HTMLElement;
+  try {
+    island = document.createElement("marimo-island");
+    island.setAttribute("data-app-id", "slidev-app");
+    island.setAttribute("data-cell-id", cell.id);
+    island.setAttribute("data-cell-idx", String(idx));
+    island.setAttribute("data-reactive", String(cell.reactive));
+  } catch {
+    // Fallback: create via innerHTML when custom element constructor conflicts
+    const template = document.createElement("template");
+    template.innerHTML = `<marimo-island data-app-id="slidev-app" data-cell-id="${cell.id}" data-cell-idx="${idx}" data-reactive="${cell.reactive}"></marimo-island>`;
+    island = template.content.firstElementChild as HTMLElement;
+  }
   island.style.display = "none";
 
   const output = document.createElement("marimo-cell-output");

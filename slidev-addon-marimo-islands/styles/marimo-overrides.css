@@ -16,16 +16,8 @@
   --marimo-table-border: rgba(0, 0, 0, 0.1);
 }
 
-/* Dark mode values - applies to both prefers-color-scheme and Slidev's .dark class */
-@media (prefers-color-scheme: dark) {
-  :root {
-    --marimo-output-bg: var(--slidev-code-background, #1e1e1e);
-    --marimo-output-fg: var(--slidev-code-foreground, #d4d4d4);
-    --marimo-table-header-bg: rgba(255, 255, 255, 0.1);
-    --marimo-table-border: rgba(255, 255, 255, 0.1);
-  }
-}
-
+/* Dark mode values - use Slidev's .dark class only to ensure theme matches
+   Slidev's setting rather than system preference */
 .dark {
   --marimo-output-bg: var(--slidev-code-background, #1e1e1e);
   --marimo-output-fg: var(--slidev-code-foreground, #d4d4d4);
@@ -64,6 +56,16 @@ marimo-island .marimo-dropdown,
 marimo-island .marimo-button {
   width: 100%;
   max-width: 100%;
+}
+
+/* Ensure range inputs (sliders) are visible and properly sized */
+marimo-island input[type="range"] {
+  width: 100%;
+  min-width: 200px;
+  height: 8px;
+  display: block;
+  -webkit-appearance: auto;
+  appearance: auto;
 }
 
 /* ============================================

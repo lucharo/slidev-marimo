@@ -148,7 +148,7 @@ function moveIslandToContainer(island: HTMLElement, container: HTMLElement) {
   // Move the island into our container
   container.appendChild(island);
 
-  console.log(`📍 Island moved into container for inline positioning`);
+  console.debug(`📍 Island moved into container for inline positioning`);
 }
 
 // Mount: register cell and set up island
