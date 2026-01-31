@@ -48,11 +48,22 @@ mo.md(f'''
 
 Draw your data, see it plotted! Built with [wigglystuff](https://github.com/koaning/wigglystuff) by Vincent Warmerdam.
 
+<div class="grid grid-cols-2 gap-8">
+<div>
+
+```marimo displayCode=false
+import micropip
+await micropip.install(['drawdata'])
+```
+
 ```marimo
 from drawdata import ScatterWidget
 widget = mo.ui.anywidget(ScatterWidget())
 widget
 ```
+
+</div>
+<div>
 
 ```marimo displayCode=false
 import altair as alt
@@ -60,11 +71,14 @@ df = widget.data_as_pandas
 if df is not None and len(df) > 0:
     chart = alt.Chart(df).mark_circle(size=60).encode(
         x='x', y='y', color='color'
-    ).properties(width=300, height=200)
+    ).properties(width=350, height=280)
     mo.output.replace(chart)
 else:
     mo.md("*Draw some points to see them plotted!*")
 ```
+
+</div>
+</div>
 
 ---
 

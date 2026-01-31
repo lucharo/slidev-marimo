@@ -75,6 +75,9 @@ function inferMessageType(request: ControlRequest): string | null {
 
 /**
  * Patch a control request to add the missing type field if needed.
+ *
+ * Note: As of marimo 0.19.8, this is handled upstream (PR #8071).
+ * This patch remains as a fallback for older versions.
  */
 function patchRequest(request: unknown, methodName: string): unknown {
   if (typeof request !== "object" || request === null) {
@@ -83,12 +86,12 @@ function patchRequest(request: unknown, methodName: string): unknown {
 
   const req = request as ControlRequest;
 
-  // If type is already present, pass through unchanged
+  // If type is already present (marimo >= 0.19.8), pass through unchanged
   if (req.type) {
     return request;
   }
 
-  // Infer the type based on request structure
+  // Infer the type based on request structure (fallback for older versions)
   const inferredType = inferMessageType(req);
 
   if (inferredType) {
@@ -99,8 +102,8 @@ function patchRequest(request: unknown, methodName: string): unknown {
     };
   }
 
-  // Unknown request shape - log for debugging but pass through
-  console.warn(`⚠️ [${methodName}] Unknown request shape, passing through without type:`, req);
+  // Unknown request shape - pass through and let marimo handle it
+  console.debug(`⚠️ [${methodName}] Unknown request shape, passing through:`, req);
   return request;
 }
 
