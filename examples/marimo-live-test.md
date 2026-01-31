@@ -15,15 +15,10 @@ Interactive Python notebooks embedded in your slides
 
 Drag the slider and watch the output update in real-time.
 
-```marimo-live
-import marimo as mo
-slider = mo.ui.slider(1, 100, value=50, label="Select a number")
-slider
+```marimo-live cell=slider_demo
 ```
 
-```marimo-live
-squared = slider.value ** 2
-mo.md(f"**Value:** {slider.value} | **Squared:** {squared}")
+```marimo-live cell=slider_output
 ```
 
 ---
@@ -32,12 +27,7 @@ mo.md(f"**Value:** {slider.value} | **Squared:** {squared}")
 
 First, let's load the Titanic dataset (shared across slides).
 
-```marimo-live
-import polars as pl
-
-url = "https://raw.githubusercontent.com/datasciencedojo/datasets/master/titanic.csv"
-titanic = pl.read_csv(url)
-titanic.head()
+```marimo-live cell=load_titanic
 ```
 
 ---
@@ -46,30 +36,10 @@ titanic.head()
 
 Select a column to visualize.
 
-```marimo-live
-dropdown = mo.ui.dropdown(
-    options=["Survived", "Pclass", "Sex", "Age", "Fare"],
-    value="Survived",
-    label="Select column"
-)
-dropdown
+```marimo-live cell=dropdown_demo
 ```
 
-```marimo-live
-import altair as alt
-
-col = dropdown.value or "Survived"
-
-if col in ["Age", "Fare"]:
-    chart = alt.Chart(titanic.to_pandas()).mark_bar().encode(
-        alt.X(f"{col}:Q", bin=True), y="count()"
-    ).properties(width=500, height=250)
-else:
-    chart = alt.Chart(titanic.to_pandas()).mark_bar().encode(
-        x=f"{col}:N", y="count()"
-    ).properties(width=500, height=250)
-
-mo.ui.altair_chart(chart)
+```marimo-live cell=chart_demo
 ```
 
 ---
@@ -78,8 +48,7 @@ mo.ui.altair_chart(chart)
 
 Browse and filter the Titanic dataset interactively.
 
-```marimo-live
-mo.ui.dataframe(titanic)
+```marimo-live cell=data_explorer_demo
 ```
 
 ---
@@ -88,14 +57,10 @@ mo.ui.dataframe(titanic)
 
 Toggle states that react immediately.
 
-```marimo-live
-check = mo.ui.checkbox(label="Enable feature")
-switch = mo.ui.switch(label="Dark mode")
-mo.hstack([check, switch])
+```marimo-live cell=checkbox_demo
 ```
 
-```marimo-live
-mo.md(f"Checkbox: **{check.value}** | Switch: **{switch.value}**")
+```marimo-live cell=checkbox_output
 ```
 
 ---
@@ -104,13 +69,10 @@ mo.md(f"Checkbox: **{check.value}** | Switch: **{switch.value}**")
 
 Type your name and see a greeting.
 
-```marimo-live
-text = mo.ui.text(placeholder="Type something...", label="Name")
-text
+```marimo-live cell=text_input_demo
 ```
 
-```marimo-live
-mo.md(f"# Hello, {text.value}!" if text.value else "_Enter your name above_")
+```marimo-live cell=text_output
 ```
 
 ---
@@ -124,10 +86,10 @@ mo.md(f"# Hello, {text.value}!" if text.value else "_Enter your name above_")
 └─────────────────┘                    └─────────────────┘
 ```
 
+- Write code in your marimo notebook
+- Reference cells by name in slides
 - Full Python kernel running locally
-- Any package: polars, altair, scikit-learn...
 - UI elements sync bidirectionally
-- Cells react to each other automatically
 
 ---
 
@@ -141,14 +103,12 @@ marimo edit notebook.py --sandbox --headless --port 2718 --no-token --allow-orig
 slidev slides.md
 ```
 
-Add the addon to your slides:
+Reference cells by name:
 
-```yaml
----
-addons:
-  - slidev-marimo-live
----
+~~~markdown
+```marimo-live cell=plot_chart
 ```
+~~~
 
 ---
 
