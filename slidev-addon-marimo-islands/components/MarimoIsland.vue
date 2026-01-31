@@ -104,6 +104,9 @@ let contentObserver: MutationObserver | null = null;
 let spinnerTimeout: ReturnType<typeof setTimeout> | null = null;
 let noOutputTimeout: ReturnType<typeof setTimeout> | null = null;
 
+// Module-level flag to prevent multiple components from starting slider polling
+let sliderPollingStarted = false;
+
 // Retry configuration for finding island elements
 const FIND_ISLAND_MAX_ATTEMPTS = 20;
 const FIND_ISLAND_INTERVAL_MS = 250;
@@ -147,6 +150,8 @@ function injectAllSliderStyles() {
     if (shadowRoot && !shadowRoot.querySelector('#marimo-slider-fix')) {
       const style = document.createElement('style');
       style.id = 'marimo-slider-fix';
+      // Use CSS custom properties with fallbacks for theme compatibility
+      // CSS custom properties inherit into shadow DOM
       style.textContent = `
         [data-orientation="horizontal"] {
           width: 200px !important;
@@ -156,19 +161,19 @@ function injectAllSliderStyles() {
         [data-testid="track"] {
           width: 100% !important;
           height: 8px !important;
-          background-color: #64748b !important;
+          background-color: var(--ring, #64748b) !important;
           border-radius: 9999px !important;
         }
         [data-testid="range"] {
           height: 100% !important;
-          background-color: #3b82f6 !important;
+          background-color: var(--primary, #3b82f6) !important;
           border-radius: 9999px !important;
         }
         [data-testid="thumb"] {
           width: 16px !important;
           height: 16px !important;
-          background-color: white !important;
-          border: 2px solid #3b82f6 !important;
+          background-color: var(--background, white) !important;
+          border: 2px solid var(--primary, #3b82f6) !important;
           border-radius: 50% !important;
         }
       `;
@@ -340,8 +345,8 @@ onMounted(async () => {
 
       // Step 6: Poll for sliders and inject styles globally
       // Run once per page, not per component
-      if (!(window as any).__marimoSliderStylesPolling) {
-        (window as any).__marimoSliderStylesPolling = true;
+      if (!sliderPollingStarted) {
+        sliderPollingStarted = true;
         pollForSliders();
       }
     }
