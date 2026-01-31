@@ -17,11 +17,66 @@ const props = defineProps<{
   error?: string | null;
 }>();
 
+// Configure DOMPurify to allow marimo's custom elements
+const MARIMO_TAGS = [
+  'marimo-ui-element',
+  'marimo-slider',
+  'marimo-dropdown',
+  'marimo-checkbox',
+  'marimo-switch',
+  'marimo-text',
+  'marimo-text-area',
+  'marimo-button',
+  'marimo-number',
+  'marimo-date',
+  'marimo-radio',
+  'marimo-multiselect',
+  'marimo-file',
+  'marimo-dataframe',
+  'marimo-table',
+  'marimo-code-editor',
+  'marimo-chart',
+  'marimo-altair',
+  'marimo-plotly',
+  'marimo-html',
+  'marimo-md',
+  'marimo-accordion',
+  'marimo-tabs',
+  'marimo-tree',
+  'marimo-stat',
+  'marimo-callout',
+  'marimo-progress',
+  'marimo-status',
+  'marimo-lazy',
+  'marimo-anywidget',
+];
+
+const MARIMO_ATTRS = [
+  'object-id',
+  'random-id',
+  'data-*',
+  'label',
+  'min',
+  'max',
+  'step',
+  'value',
+  'disabled',
+  'placeholder',
+];
+
 const htmlContent = computed(() => {
   if (!props.output) return null;
   const html = extractHtml(props.output);
-  // Sanitize HTML to prevent XSS
-  return html ? DOMPurify.sanitize(html) : null;
+  // Sanitize HTML to prevent XSS, but allow marimo's custom elements
+  return html ? DOMPurify.sanitize(html, {
+    ADD_TAGS: MARIMO_TAGS,
+    ADD_ATTR: MARIMO_ATTRS,
+    CUSTOM_ELEMENT_HANDLING: {
+      tagNameCheck: (tagName) => tagName.startsWith('marimo-'),
+      attributeNameCheck: () => true,
+      allowCustomizedBuiltInElements: true,
+    },
+  }) : null;
 });
 
 // Console array is normalized by kernel-connection.ts; this handles data field rendering

@@ -61,7 +61,11 @@ const props = withDefaults(
 const kernel = useMarimoKernel();
 
 // Resolve cell reference to notebook cell
+// Depend on isKernelReady to re-compute when notebook cells are registered
 const notebookCell = computed(() => {
+  // Access isKernelReady to create reactive dependency
+  const ready = kernel.isKernelReady.value;
+
   if (!props.cell) return null;
 
   // Try by ID first
@@ -135,7 +139,7 @@ const cellState = computed(() => kernel.getCellState(myCellId.value));
 
 // Derived state
 const output = computed(() => cellState.value?.output || null);
-const console = computed(() => cellState.value?.console || []);
+const consoleMessages = computed(() => cellState.value?.console || []);
 const error = computed(
   () => localError.value || cellState.value?.error || null,
 );
@@ -323,7 +327,7 @@ function handleKeydown(event: KeyboardEvent) {
     <div class="output-container">
       <MarimoOutput
         :output="output"
-        :console="console"
+        :console="consoleMessages"
         :error="error"
       />
     </div>

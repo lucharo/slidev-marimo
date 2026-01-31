@@ -349,7 +349,12 @@ export function createKernelConnection(
         throw new Error("Not connected to kernel");
       }
 
-      await httpRequest("/api/kernel/instantiate", "POST");
+      // InstantiateNotebookRequest requires objectIds and values arrays
+      // Empty arrays means instantiate all cells with their default values
+      await httpRequest("/api/kernel/instantiate", "POST", {
+        objectIds: [],
+        values: [],
+      });
     },
 
     async setUIElementValue(objectId: string, value: unknown) {

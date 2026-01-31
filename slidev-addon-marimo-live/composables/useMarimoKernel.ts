@@ -54,6 +54,7 @@ export function initializeKernelListeners(kernel: KernelConnection): void {
   // Handle kernel ready
   kernel.onKernelReady((data: KernelReadyData) => {
     console.log("[marimo-live] Kernel ready", data);
+    console.log("[marimo-live] Kernel ready with", data.cellIds?.length, "cells");
     setKernelReady(true);
 
     // Register notebook cells (from the .py file)

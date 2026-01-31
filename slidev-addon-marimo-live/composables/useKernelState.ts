@@ -137,7 +137,7 @@ export function registerNotebookCells(
   }
 
   console.log(
-    `[marimo-live] Registered ${cellIds.length} notebook cells`,
+    `[marimo-live] Registered ${cellIds.length} notebook cells:`,
     Array.from(notebookCellsByName.keys()),
   );
 }
@@ -151,8 +151,11 @@ export function getNotebookCellById(cellId: string): NotebookCell | undefined {
 
 /**
  * Get a notebook cell by name (function name in marimo)
+ * Note: Access the reactive map's size first to ensure Vue tracks this dependency
  */
 export function getNotebookCellByName(name: string): NotebookCell | undefined {
+  // Access size to create a reactive dependency (Vue tracks Map.size changes)
+  const _ = notebookCellsByName.size;
   return notebookCellsByName.get(name);
 }
 

@@ -54,8 +54,21 @@ export default ({ app }) => {
   // Auto-connect when the app starts
   kernel
     .connect()
-    .then(() => {
+    .then(async () => {
       console.log("[marimo-live] Connected to marimo server");
+
+      // In edit mode, auto_instantiate doesn't run cells automatically.
+      // We need to call instantiate() to run all cells and share state.
+      // Wait a bit for the kernel-ready message to be processed first.
+      setTimeout(async () => {
+        try {
+          console.log("[marimo-live] Calling instantiate to run all cells...");
+          await kernel.instantiate();
+          console.log("[marimo-live] Notebook instantiated successfully");
+        } catch (err) {
+          console.warn("[marimo-live] Failed to instantiate notebook:", err);
+        }
+      }, 500);
     })
     .catch((err) => {
       console.error("[marimo-live] Failed to connect:", err);
