@@ -18,6 +18,7 @@
 import type { MarimoKernel } from "../composables/useMarimoKernel";
 import type { CellRegistry } from "../composables/useCellRegistry";
 import { MARIMO_VERSION } from "./constants";
+import { patchKernelMessages } from "./kernel-message-patch";
 
 // Track initialization state
 let isInitialized = false;
@@ -275,6 +276,32 @@ function loadMarimoScript(kernel: MarimoKernel): Promise<void> {
 }
 
 /**
+ * Apply the kernel message patch with retries.
+ * The bridge may not be available immediately after kernel ready signal.
+ */
+function applyKernelPatch(): void {
+  let attempts = 0;
+  const maxAttempts = 20;
+  const retryInterval = 100;
+
+  const tryPatch = () => {
+    attempts++;
+    if (patchKernelMessages()) {
+      console.log("✓ Kernel message patch applied successfully");
+      return;
+    }
+
+    if (attempts < maxAttempts) {
+      setTimeout(tryPatch, retryInterval);
+    } else {
+      console.warn("⚠️ Failed to apply kernel message patch after max attempts");
+    }
+  };
+
+  tryPatch();
+}
+
+/**
  * Set up listener for kernel-ready message from marimo worker.
  */
 function setupKernelReadyListener(kernel: MarimoKernel): void {
@@ -309,6 +336,7 @@ function setupKernelReadyListener(kernel: MarimoKernel): void {
     ) {
       cleanup();
       kernel.markReady();
+      applyKernelPatch();
     }
   };
   window.addEventListener("message", messageHandler);
@@ -319,6 +347,7 @@ function setupKernelReadyListener(kernel: MarimoKernel): void {
     if (customElements.get("marimo-island")) {
       cleanup();
       kernel.markReady();
+      applyKernelPatch();
       return true;
     }
     return false;
