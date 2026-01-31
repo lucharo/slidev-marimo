@@ -105,3 +105,9 @@ export function isIdUsed(id: string): boolean {
 export function getAllMarimoIds(): readonly string[] {
   return MARIMO_CELL_IDS;
 }
+
+// HMR: Force full page reload when this file changes
+// Cell ID state must be reset properly, which requires a full reload
+if (import.meta.hot) {
+  import.meta.hot.decline();
+}

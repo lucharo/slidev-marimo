@@ -170,8 +170,15 @@ export function useCellRegistry(): CellRegistry {
 /**
  * Install the registry into a Vue app.
  * Called by setup/main.ts.
+ *
+ * Note: Resets cell IDs on installation to handle HMR scenarios where
+ * the Vue app is recreated but module state persists.
  */
 export function installCellRegistry(app: App): CellRegistry {
+  // Reset cell IDs to handle HMR - the Vue app may be recreated while
+  // the cellId module state persists across HMR cycles
+  resetCellIds();
+
   const registry = createCellRegistry();
   app.provide(CELL_REGISTRY_KEY, registry);
   return registry;
