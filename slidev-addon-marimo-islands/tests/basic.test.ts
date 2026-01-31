@@ -112,6 +112,79 @@ describe("slidev-marimo-islands", () => {
   });
 
 
+  describe("Island Registry", () => {
+    it("should create island element from a valid marker", async () => {
+      // Set up a more complete DOM mock for this test
+      const appendedChildren: any[] = [];
+
+      global.document.createElement = vi.fn((tag: string) => {
+        const el = {
+          tagName: tag,
+          hidden: false,
+          textContent: "",
+          style: {},
+          setAttribute: vi.fn(),
+          appendChild: vi.fn(() => el),
+          querySelector: vi.fn(() => null),
+          classList: { add: vi.fn(), contains: vi.fn() },
+        };
+        return el;
+      }) as any;
+
+      global.document.body = {
+        appendChild: vi.fn((child) => appendedChildren.push(child)),
+      } as any;
+
+      global.document.querySelector = vi.fn(() => null);
+      global.document.querySelectorAll = vi.fn(() => []);
+
+      const { createIslandFromMarker } = await import(
+        "../setup/island-registry"
+      );
+
+      const marker = {
+        dataset: {
+          islandId: "test-island-1",
+          islandReactive: "true",
+          islandCode: encodeURIComponent('print("hello")'),
+        },
+      };
+
+      const result = createIslandFromMarker(marker as any, 0);
+      expect(result).toBe(true);
+      expect(appendedChildren.length).toBe(1);
+    });
+
+    it("should skip marker without island ID", async () => {
+      global.document.querySelector = vi.fn(() => null);
+
+      const { createIslandFromMarker } = await import(
+        "../setup/island-registry"
+      );
+
+      const marker = { dataset: {} };
+      const result = createIslandFromMarker(marker as any, 0);
+      expect(result).toBe(false);
+    });
+
+    it("should skip marker if island already exists", async () => {
+      global.document.querySelector = vi.fn(() => ({})); // island exists
+
+      const { createIslandFromMarker } = await import(
+        "../setup/island-registry"
+      );
+
+      const marker = {
+        dataset: {
+          islandId: "existing-island",
+          islandCode: encodeURIComponent("x = 1"),
+        },
+      };
+      const result = createIslandFromMarker(marker as any, 0);
+      expect(result).toBe(false);
+    });
+  });
+
   describe("Performance", () => {
     it("should handle multiple islands efficiently", async () => {
       // Test that multiple instances share state properly

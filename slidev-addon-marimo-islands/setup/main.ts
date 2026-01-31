@@ -2,7 +2,12 @@
 // This file is automatically loaded by Slidev
 
 import { MARIMO_VERSION } from "./constants";
-import { getIslandCount, initializeMarimo } from "./island-registry";
+import {
+  createIslandFromMarker,
+  getIslandCount,
+  initializeMarimo,
+  isMarimoInitialized,
+} from "./island-registry";
 
 export default ({ app }) => {
   // Register marimo custom elements so Vue doesn't try to compile them
@@ -119,6 +124,43 @@ export default ({ app }) => {
 
       // Start checking after a small initial delay to let Vue start mounting
       setTimeout(checkForIslands, 500);
+
+      // Watch for late-arriving markers (e.g., navigating to a new slide)
+      // After initial initialization, any new marker gets its island created immediately
+      const markerObserver = new MutationObserver((mutations) => {
+        if (!isMarimoInitialized()) return;
+
+        for (const mutation of mutations) {
+          for (const node of mutation.addedNodes) {
+            if (!(node instanceof HTMLElement)) continue;
+
+            // Check if the added node itself is a marker
+            const markers: HTMLElement[] = [];
+            if (node.classList.contains("marimo-island-marker")) {
+              markers.push(node);
+            }
+            // Check descendants (e.g., if a parent container was added)
+            node
+              .querySelectorAll<HTMLElement>(".marimo-island-marker")
+              .forEach((m) => markers.push(m));
+
+            for (const marker of markers) {
+              const existingCount =
+                document.querySelectorAll("marimo-island").length;
+              if (createIslandFromMarker(marker, existingCount)) {
+                console.log(
+                  `🔄 Late marker detected: created island for ${marker.dataset.islandId}`,
+                );
+              }
+            }
+          }
+        }
+      });
+
+      markerObserver.observe(document.body, {
+        childList: true,
+        subtree: true,
+      });
     }
   }
 };

@@ -21,6 +21,63 @@ function getIslandMarkers(): NodeListOf<HTMLElement> {
 }
 
 /**
+ * Create a marimo-island element from a single marker.
+ * Returns true if island was created, false if skipped.
+ */
+export function createIslandFromMarker(
+  marker: HTMLElement,
+  idx: number,
+): boolean {
+  const islandId = marker.dataset.islandId;
+  const islandReactive = marker.dataset.islandReactive;
+  const islandCode = marker.dataset.islandCode;
+
+  if (!islandId) {
+    console.warn(`⚠️ Skipping marker ${idx}: missing island ID`);
+    return false;
+  }
+
+  // Skip if island already exists for this marker
+  if (document.querySelector(`marimo-island[data-marker-id="${islandId}"]`)) {
+    return false;
+  }
+
+  if (!islandCode) {
+    console.warn(`⚠️ Skipping marker ${idx} (${islandId}): missing island code`);
+    return false;
+  }
+
+  let decodedCode: string;
+  try {
+    decodedCode = decodeURIComponent(islandCode);
+  } catch (err) {
+    console.warn(
+      `⚠️ Skipping marker ${idx} (${islandId}): failed to decode code - ${err}`,
+    );
+    return false;
+  }
+
+  const island = document.createElement("marimo-island");
+  island.setAttribute("data-app-id", "slidev-app");
+  island.setAttribute("data-cell-id", islandId);
+  island.setAttribute("data-cell-idx", String(idx));
+  island.setAttribute("data-reactive", islandReactive || "true");
+  island.setAttribute("data-marker-id", islandId);
+  island.style.display = "none";
+
+  const output = document.createElement("marimo-cell-output");
+
+  const code = document.createElement("marimo-cell-code");
+  code.hidden = true;
+  code.textContent = decodedCode;
+
+  island.appendChild(output);
+  island.appendChild(code);
+  document.body.appendChild(island);
+  return true;
+}
+
+/**
  * Initialize marimo - reads island data from DOM markers
  * This is called by setup/main.ts when markers are stable
  */
@@ -34,55 +91,8 @@ export function initializeMarimo() {
 
   console.log(`🚀 Initializing marimo with ${markers.length} islands from DOM`);
 
-  // Create marimo-island elements from markers
   markers.forEach((marker, idx) => {
-    // Validate required attributes
-    const islandId = marker.dataset.islandId;
-    const islandReactive = marker.dataset.islandReactive;
-    const islandCode = marker.dataset.islandCode;
-
-    if (!islandId) {
-      console.warn(`⚠️ Skipping marker ${idx}: missing island ID`);
-      return;
-    }
-
-    if (!islandCode) {
-      console.warn(
-        `⚠️ Skipping marker ${idx} (${islandId}): missing island code`,
-      );
-      return;
-    }
-
-    // Decode the code, with error handling for malformed encoding
-    let decodedCode: string;
-    try {
-      decodedCode = decodeURIComponent(islandCode);
-    } catch (err) {
-      console.warn(
-        `⚠️ Skipping marker ${idx} (${islandId}): failed to decode code - ${err}`,
-      );
-      return;
-    }
-
-    const island = document.createElement("marimo-island");
-    island.setAttribute("data-app-id", "slidev-app");
-    island.setAttribute("data-cell-id", islandId);
-    island.setAttribute("data-cell-idx", String(idx));
-    island.setAttribute("data-reactive", islandReactive || "true");
-    island.setAttribute("data-marker-id", islandId); // Link back to marker
-    island.style.display = "none";
-
-    const output = document.createElement("marimo-cell-output");
-
-    // marimo-cell-code holds the Python code for execution
-    // Always hidden - code display is handled by Vue component
-    const code = document.createElement("marimo-cell-code");
-    code.hidden = true;
-    code.textContent = decodedCode;
-
-    island.appendChild(output);
-    island.appendChild(code);
-    document.body.appendChild(island);
+    createIslandFromMarker(marker, idx);
   });
 
   console.log("✓ Created all island elements in DOM from markers");

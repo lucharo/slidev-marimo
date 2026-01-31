@@ -42,10 +42,12 @@ const props = withDefaults(
     code: string;
     displayCode?: boolean;
     hideLines?: number[];
+    codePosition?: "top" | "bottom";
   }>(),
   {
     displayCode: true,
     hideLines: () => [],
+    codePosition: "top",
   },
 );
 
@@ -73,6 +75,39 @@ const isLoading = ref(true);
 let marker: HTMLElement | null = null;
 let observer: IntersectionObserver | null = null;
 let resizeObserver: ResizeObserver | null = null;
+let contentObserver: MutationObserver | null = null;
+let resizeHandler: (() => void) | null = null;
+
+/**
+ * Find the island element with retries. Late-mounting components
+ * (e.g., navigating to a new slide) may not have their island
+ * created immediately.
+ */
+async function findIsland(
+  id: string,
+  maxAttempts = 10,
+  intervalMs = 500,
+): Promise<HTMLElement | null> {
+  for (let attempt = 0; attempt < maxAttempts; attempt++) {
+    const island = document.querySelector<HTMLElement>(
+      `marimo-island[data-marker-id="${id}"]`,
+    );
+    if (island) return island;
+    await new Promise((r) => setTimeout(r, intervalMs));
+  }
+  return null;
+}
+
+/**
+ * Position the island element over our container placeholder.
+ */
+function updateIslandPosition(island: HTMLElement, container: HTMLElement) {
+  const rect = container.getBoundingClientRect();
+  island.style.position = "absolute";
+  island.style.left = `${rect.left + window.scrollX}px`;
+  island.style.top = `${rect.top + window.scrollY}px`;
+  island.style.width = `${rect.width || 800}px`;
+}
 
 // After component mounts, create marker and wait for marimo
 onMounted(async () => {
@@ -92,25 +127,21 @@ onMounted(async () => {
 
     console.log(`📝 Island ${myIslandId} marker created`);
 
-    // Wait for marimo to be ready
+    // Wait for marimo custom element to be registered
     await waitUntilReady();
 
     console.log(
       `✓ Island ${myIslandId}: Marimo ready, finding island element...`,
     );
 
-    // Find our island by the marker ID attribute
-    const island = document.querySelector<HTMLElement>(
-      `marimo-island[data-marker-id="${myIslandId}"]`,
-    );
+    // Find our island with retries (handles late-mounting after navigation)
+    const island = await findIsland(myIslandId);
 
     if (!island) {
-      // Don't throw error - this happens when Slidev preloads the next slide
-      // The component mounts but marimo hasn't initialized this island yet
-      // Just stay in loading state - will work when user navigates to this slide and refreshes
-      console.warn(
-        `⏸️  Island ${myIslandId}: Not yet initialized (preloaded slide). Navigate here and refresh to load.`,
-      );
+      error.value =
+        "Island element not found after retries. Try refreshing the page.";
+      isLoading.value = false;
+      console.warn(`⏸️  Island ${myIslandId}: Not found after 10 retries.`);
       return;
     }
 
@@ -118,33 +149,53 @@ onMounted(async () => {
       `✓ Island ${myIslandId}: Found element, waiting for visibility...`,
     );
 
-    // DON'T move the island - that breaks React's internal state
-    // Use IntersectionObserver to continuously monitor visibility
-    // This handles Slidev's slide navigation correctly
+    // Watch for actual rendered content inside the island output
+    // This ensures we don't dismiss the spinner before Python output exists
+    const outputEl = island.querySelector("marimo-cell-output");
+    if (outputEl) {
+      contentObserver = new MutationObserver(() => {
+        if (outputEl.children.length > 0) {
+          isLoading.value = false;
+          contentObserver?.disconnect();
+          contentObserver = null;
+          console.log(`✓ Island ${myIslandId}: Output rendered`);
+        }
+      });
+      contentObserver.observe(outputEl, { childList: true, subtree: true });
+      // Check if content already exists (island may have rendered quickly)
+      if (outputEl.children.length > 0) {
+        isLoading.value = false;
+        contentObserver.disconnect();
+        contentObserver = null;
+      }
+    }
+
+    // Set up positioning via IntersectionObserver
     if (islandContainer.value) {
+      const container = islandContainer.value;
+
+      // Reusable position updater
+      const syncPosition = () => {
+        if (!container || !island.isConnected) return;
+        updateIslandPosition(island, container);
+      };
+
+      // Listen for window resize to reposition
+      resizeHandler = syncPosition;
+      window.addEventListener("resize", resizeHandler);
+
       observer = new IntersectionObserver((entries) => {
-        // Guard against callback firing during unmount
-        const container = islandContainer.value;
-        if (!container) return;
+        if (!islandContainer.value) return;
 
         entries.forEach((entry) => {
           if (entry.isIntersecting) {
-            // Container is visible - position and show island
-            const rect = container.getBoundingClientRect();
-
-            // Position island absolutely at the same location as our placeholder
-            island.style.position = "absolute";
-            island.style.left = `${rect.left + window.scrollX}px`;
-            island.style.top = `${rect.top + window.scrollY}px`;
-            island.style.width = `${rect.width || 800}px`;
+            syncPosition();
             island.style.display = "block";
             island.style.zIndex = "10";
 
-            // Use ResizeObserver to sync container height with island height
-            // This ensures content below the island flows correctly
+            // Sync container height with island height
             if (!resizeObserver) {
               resizeObserver = new ResizeObserver(() => {
-                // Guard against callback firing on detached elements
                 if (!island.isConnected) return;
                 const islandHeight = island.offsetHeight;
                 if (islandContainer.value && islandHeight > 0) {
@@ -154,30 +205,21 @@ onMounted(async () => {
               resizeObserver.observe(island);
             }
 
-            // Set initial height
             const initialHeight = island.offsetHeight;
             if (initialHeight > 0) {
               container.style.height = `${initialHeight}px`;
             } else {
-              // Fallback until island renders
               container.style.minHeight = "100px";
             }
 
-            isLoading.value = false;
-
-            console.log(
-              `✓ Island ${myIslandId}: Visible and positioned, height synced`,
-            );
+            console.log(`✓ Island ${myIslandId}: Visible and positioned`);
           } else {
-            // Container is NOT visible - hide island
             island.style.display = "none";
-            console.log(`🔒 Island ${myIslandId}: Hidden (not visible)`);
           }
         });
       });
 
-      // Start observing the container - keep observer active!
-      observer.observe(islandContainer.value);
+      observer.observe(container);
     }
   } catch (err) {
     error.value = err instanceof Error ? err.message : "Unknown error";
@@ -188,6 +230,10 @@ onMounted(async () => {
 
 // Cleanup when component unmounts
 onUnmounted(() => {
+  if (contentObserver) {
+    contentObserver.disconnect();
+    contentObserver = null;
+  }
   if (resizeObserver) {
     resizeObserver.disconnect();
     resizeObserver = null;
@@ -196,9 +242,12 @@ onUnmounted(() => {
     observer.disconnect();
     observer = null;
   }
+  if (resizeHandler) {
+    window.removeEventListener("resize", resizeHandler);
+    resizeHandler = null;
+  }
   if (marker) {
     marker.remove();
-    console.log(`🗑️  Island ${myIslandId}: Marker removed`);
     marker = null;
   }
 });
@@ -206,8 +255,8 @@ onUnmounted(() => {
 
 <template>
   <div class="marimo-island-wrapper">
-    <!-- Code display -->
-    <div v-if="displayCode && !error" class="code-block">
+    <!-- Code display (top position) -->
+    <div v-if="displayCode && !error && codePosition === 'top'" class="code-block">
       <pre><code class="language-python">{{ processedCode }}</code></pre>
     </div>
 
@@ -228,6 +277,11 @@ onUnmounted(() => {
 
     <!-- Island container - marimo output will be positioned here -->
     <div ref="islandContainer" class="island-content"></div>
+
+    <!-- Code display (bottom position) -->
+    <div v-if="displayCode && !error && codePosition === 'bottom'" class="code-block">
+      <pre><code class="language-python">{{ processedCode }}</code></pre>
+    </div>
   </div>
 </template>
 
