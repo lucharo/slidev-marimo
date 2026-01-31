@@ -161,6 +161,11 @@ export default ({ app }) => {
         childList: true,
         subtree: true,
       });
+
+      // Disconnect observer when page unloads to prevent memory leaks
+      window.addEventListener("beforeunload", () => {
+        markerObserver.disconnect();
+      });
     }
   }
 };

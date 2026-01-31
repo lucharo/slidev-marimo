@@ -78,6 +78,10 @@ let resizeObserver: ResizeObserver | null = null;
 let contentObserver: MutationObserver | null = null;
 let resizeHandler: (() => void) | null = null;
 
+// Retry configuration for finding island elements
+const FIND_ISLAND_MAX_ATTEMPTS = 10;
+const FIND_ISLAND_INTERVAL_MS = 500;
+
 /**
  * Find the island element with retries. Late-mounting components
  * (e.g., navigating to a new slide) may not have their island
@@ -85,14 +89,17 @@ let resizeHandler: (() => void) | null = null;
  */
 async function findIsland(
   id: string,
-  maxAttempts = 10,
-  intervalMs = 500,
+  maxAttempts = FIND_ISLAND_MAX_ATTEMPTS,
+  intervalMs = FIND_ISLAND_INTERVAL_MS,
 ): Promise<HTMLElement | null> {
   for (let attempt = 0; attempt < maxAttempts; attempt++) {
     const island = document.querySelector<HTMLElement>(
       `marimo-island[data-marker-id="${id}"]`,
     );
     if (island) return island;
+    if (attempt > 0 && attempt % 3 === 0) {
+      console.debug(`🔍 Island ${id}: retry ${attempt + 1}/${maxAttempts}...`);
+    }
     await new Promise((r) => setTimeout(r, intervalMs));
   }
   return null;

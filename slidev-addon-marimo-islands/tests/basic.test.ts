@@ -3,7 +3,12 @@
  * Tests core functionality without over-engineering
  */
 
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+
+// Store original globals for restoration
+let originalDocument: typeof global.document;
+let originalWindow: typeof global.window;
+let originalCustomElements: typeof global.customElements;
 
 // Mock DOM environment for testing
 const mockDom = () => {
@@ -36,8 +41,19 @@ const mockDom = () => {
 
 describe("slidev-marimo-islands", () => {
   beforeEach(() => {
+    // Save original globals before mocking
+    originalDocument = global.document;
+    originalWindow = global.window;
+    originalCustomElements = global.customElements;
     mockDom();
     vi.clearAllMocks();
+  });
+
+  afterEach(() => {
+    // Restore original globals after each test
+    global.document = originalDocument;
+    global.window = originalWindow;
+    global.customElements = originalCustomElements;
   });
 
   describe("MarimoIsland Component", () => {
