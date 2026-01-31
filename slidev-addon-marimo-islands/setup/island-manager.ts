@@ -67,6 +67,26 @@ export function loadMarimoResources(): void {
   katex.crossOrigin = "anonymous";
   document.head.appendChild(katex);
 
+  // Prism.js for syntax highlighting (Tomorrow Night theme)
+  const prismCss = document.createElement("link");
+  prismCss.rel = "stylesheet";
+  prismCss.href =
+    "https://cdn.jsdelivr.net/npm/prismjs@1.29.0/themes/prism-tomorrow.min.css";
+  document.head.appendChild(prismCss);
+
+  const prismJs = document.createElement("script");
+  prismJs.src =
+    "https://cdn.jsdelivr.net/npm/prismjs@1.29.0/prism.min.js";
+  prismJs.defer = true;
+  document.head.appendChild(prismJs);
+
+  // Prism Python language support
+  const prismPython = document.createElement("script");
+  prismPython.src =
+    "https://cdn.jsdelivr.net/npm/prismjs@1.29.0/components/prism-python.min.js";
+  prismPython.defer = true;
+  document.head.appendChild(prismPython);
+
   // Marimo islands CSS
   const link = document.createElement("link");
   link.id = "marimo-islands-css";

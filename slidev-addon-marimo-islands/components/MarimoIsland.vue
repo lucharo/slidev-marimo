@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, onUnmounted, ref } from "vue";
+import { computed, nextTick, onMounted, onUnmounted, ref, watch } from "vue";
 import { useMarimoKernel } from "../composables/useMarimoKernel";
 import { useCellRegistry } from "../composables/useCellRegistry";
 import { createSingleIsland, isMarimoInitialized } from "../setup/island-manager";
@@ -85,8 +85,24 @@ const registry = useCellRegistry();
 // Component state
 const cellId = ref<string | null>(null);
 const islandContainer = ref<HTMLElement | null>(null);
+const codeElement = ref<HTMLElement | null>(null);
 const error = ref<string | null>(null);
 const isLoading = ref(true);
+
+// Highlight code when element is available
+const highlightCode = async () => {
+  await nextTick();
+  if (codeElement.value && typeof window !== "undefined") {
+    // Use Prism if available (loaded by setup)
+    const Prism = (window as any).Prism;
+    if (Prism) {
+      Prism.highlightElement(codeElement.value);
+    }
+  }
+};
+
+// Watch for code element and highlight
+watch(codeElement, highlightCode);
 
 // Observers and handlers for cleanup
 let observer: IntersectionObserver | null = null;
@@ -135,6 +151,9 @@ function updateIslandPosition(island: HTMLElement, container: HTMLElement) {
 
 // Mount: register cell and set up island
 onMounted(async () => {
+  // Highlight code block (runs synchronously before async operations)
+  highlightCode();
+
   try {
     // Step 1: Register this cell in the registry
     cellId.value = registry.registerCell(processedCode.value, true);
@@ -308,7 +327,7 @@ onUnmounted(() => {
   <div class="marimo-island-wrapper">
     <!-- Code display (top position) -->
     <div v-if="displayCode && !error && codePosition === 'top'" class="code-block">
-      <pre><code class="language-python">{{ processedCode }}</code></pre>
+      <pre><code ref="codeElement" class="language-python">{{ processedCode }}</code></pre>
     </div>
 
     <!-- Error state -->
@@ -331,7 +350,7 @@ onUnmounted(() => {
 
     <!-- Code display (bottom position) -->
     <div v-if="displayCode && !error && codePosition === 'bottom'" class="code-block">
-      <pre><code class="language-python">{{ processedCode }}</code></pre>
+      <pre><code ref="codeElement" class="language-python">{{ processedCode }}</code></pre>
     </div>
   </div>
 </template>
