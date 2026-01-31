@@ -53,7 +53,7 @@ Draw your data, see it plotted! Built with [wigglystuff](https://github.com/koan
 
 ```marimo displayCode=false
 import micropip
-await micropip.install(['drawdata'])
+await micropip.install(['drawdata']);
 ```
 
 ```marimo
