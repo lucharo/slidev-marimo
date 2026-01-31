@@ -98,16 +98,22 @@ marimo-island input[type="range"] {
 
 /* Ensure the marimo-slider custom element has proper dimensions */
 marimo-slider {
-  display: block;
-  width: 100%;
-  min-width: 200px;
-  min-height: 24px;
+  display: block !important;
+  width: 200px !important;
+  min-width: 200px !important;
+  min-height: 24px !important;
 }
 
 /* Ensure marimo-ui-element wrapper doesn't constrain the slider */
 marimo-ui-element {
-  display: block;
-  width: 100%;
+  display: block !important;
+  width: 100% !important;
+}
+
+/* Debug: ensure the output container chain has width */
+marimo-island .output {
+  width: 100% !important;
+  display: block !important;
 }
 
 /* ============================================
