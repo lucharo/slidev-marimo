@@ -260,6 +260,9 @@ function loadMarimoScript(kernel: MarimoKernel): Promise<void> {
 
     script.onload = () => {
       console.log(`✓ Marimo script loaded (v${MARIMO_VERSION})`);
+      // Apply kernel message patch immediately after script loads
+      // This must happen BEFORE cells execute to fix DataFrame and other components
+      applyKernelPatch();
       // Note: kernel.markReady() will be called when we receive the kernel-ready message
       resolve();
     };
@@ -470,5 +473,12 @@ export function cleanupMarimo(): void {
 // HMR: Force full page reload when this file changes
 // Marimo kernel state cannot be hot-reloaded
 if (import.meta.hot) {
+  // Clean up pending timeouts before reload
+  import.meta.hot.dispose(() => {
+    if (patchRetryTimeout) {
+      clearTimeout(patchRetryTimeout);
+      patchRetryTimeout = null;
+    }
+  });
   import.meta.hot.decline();
 }

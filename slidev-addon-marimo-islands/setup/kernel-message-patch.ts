@@ -29,6 +29,8 @@ interface ControlRequest {
 
 // Store original function for restoration
 let originalPutControlRequest: ((request: unknown) => Promise<unknown>) | null = null;
+// Store reference to our wrapper to detect bridge recreation
+let patchedPutControlRequest: ((request: unknown) => Promise<unknown>) | null = null;
 let isPatched = false;
 
 /**
@@ -112,13 +114,12 @@ export function patchKernelMessages(): boolean {
   }
 
   // Reset state if bridge was recreated (e.g., during HMR edge cases)
-  // This detects when we think we're patched but the bridge has a different function
-  if (isPatched && originalPutControlRequest && bridge.putControlRequest !== originalPutControlRequest) {
-    // Bridge was recreated, but current function isn't our wrapper - check if it's the original
-    // If the bridge.putControlRequest doesn't match our stored original, bridge was recreated
+  // Detect when we think we're patched but the bridge function is not our wrapper
+  if (isPatched && patchedPutControlRequest && bridge.putControlRequest !== patchedPutControlRequest) {
     console.debug("🔧 Bridge recreated, resetting patch state");
     isPatched = false;
     originalPutControlRequest = null;
+    patchedPutControlRequest = null;
   }
 
   if (isPatched) {
@@ -129,11 +130,13 @@ export function patchKernelMessages(): boolean {
   // Store original for potential restoration
   originalPutControlRequest = bridge.putControlRequest.bind(bridge);
 
-  // Install the patched version
-  bridge.putControlRequest = async (request: unknown): Promise<unknown> => {
+  // Install the patched version and store reference
+  const wrapper = async (request: unknown): Promise<unknown> => {
     const patchedRequest = patchRequest(request);
     return originalPutControlRequest!(patchedRequest);
   };
+  patchedPutControlRequest = wrapper;
+  bridge.putControlRequest = wrapper;
 
   isPatched = true;
   console.log("✓ Kernel message patch installed");
@@ -160,6 +163,7 @@ export function unpatchKernelMessages(): boolean {
   }
 
   originalPutControlRequest = null;
+  patchedPutControlRequest = null;
   isPatched = false;
   console.log("✓ Kernel message patch removed");
 
