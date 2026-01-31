@@ -82,7 +82,7 @@ export default definePreparserSetup(() => {
             if (flags.cell) {
               // Log deprecation warning at build time
               console.warn(
-                `[slidev-marimo-live] Deprecated: Use <MarimoCell cell="${flags.cell}" /> instead of \`\`\`marimo-live cell=${flags.cell}`
+                `[slidev-marimo-live] Deprecated: Use <MarimoCell cell="${flags.cell}" /> instead of \`\`\`marimo-live cell=${flags.cell}\`\`\``
               );
 
               // Backward compatibility: convert to MarimoCell component
