@@ -74,7 +74,7 @@ function setupCellStabilityCheck(
 
     // Debug logging every 10 checks
     if (totalChecks % 10 === 0) {
-      console.log(`⏱️ Stability check #${totalChecks}: ${currentCount} cells, stable for ${stableChecks} checks`);
+      console.debug(`⏱️ Stability check #${totalChecks}: ${currentCount} cells, stable for ${stableChecks} checks`);
     }
 
     if (currentCount === lastCount) {
@@ -92,7 +92,7 @@ function setupCellStabilityCheck(
       // If stable but count=0, keep checking (components may not have mounted yet)
     } else {
       // Count changed - reset stability counter
-      console.log(`⏱️ Cell count changed: ${lastCount} → ${currentCount}`);
+      console.debug(`⏱️ Cell count changed: ${lastCount} → ${currentCount}`);
       stableChecks = 0;
       lastCount = currentCount;
     }

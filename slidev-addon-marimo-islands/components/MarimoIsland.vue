@@ -109,11 +109,13 @@ if (typeof window !== "undefined") {
   window.addEventListener("prism-ready", highlightCode, { once: true });
 }
 
-// Observers and handlers for cleanup
+// Observers, handlers, and timeouts for cleanup
 let observer: IntersectionObserver | null = null;
 let resizeObserver: ResizeObserver | null = null;
 let contentObserver: MutationObserver | null = null;
 let resizeHandler: (() => void) | null = null;
+let spinnerTimeout: ReturnType<typeof setTimeout> | null = null;
+let noOutputTimeout: ReturnType<typeof setTimeout> | null = null;
 
 // Retry configuration for finding island elements
 const FIND_ISLAND_MAX_ATTEMPTS = 20;
@@ -205,7 +207,7 @@ onMounted(async () => {
         const hasContent =
           outputEl.children.length > 0 ||
           (outputEl.textContent?.trim().length ?? 0) > 0 ||
-          outputEl.shadowRoot?.children.length;
+          (outputEl.shadowRoot?.children.length ?? 0) > 0;
         return hasContent;
       };
 
@@ -218,6 +220,10 @@ onMounted(async () => {
             isLoading.value = false;
             contentObserver?.disconnect();
             contentObserver = null;
+            if (spinnerTimeout) {
+              clearTimeout(spinnerTimeout);
+              spinnerTimeout = null;
+            }
             console.log(`✓ Cell ${cellId.value}: output rendered`);
           }
         });
@@ -228,19 +234,22 @@ onMounted(async () => {
         });
 
         // Fallback: hide spinner after 30 seconds regardless
-        setTimeout(() => {
+        spinnerTimeout = setTimeout(() => {
           if (isLoading.value) {
             isLoading.value = false;
             contentObserver?.disconnect();
             contentObserver = null;
             console.log(`⏰ Cell ${cellId.value}: spinner timeout, hiding loader`);
           }
+          spinnerTimeout = null;
         }, 30000);
       }
     } else {
       // No output element found, hide spinner after delay
-      setTimeout(() => {
+      console.debug(`⚠️ Cell ${cellId.value}: no output element found, hiding spinner in 5s`);
+      noOutputTimeout = setTimeout(() => {
         isLoading.value = false;
+        noOutputTimeout = null;
       }, 5000);
     }
 
@@ -318,6 +327,14 @@ onUnmounted(() => {
   if (resizeHandler) {
     window.removeEventListener("resize", resizeHandler);
     resizeHandler = null;
+  }
+  if (spinnerTimeout) {
+    clearTimeout(spinnerTimeout);
+    spinnerTimeout = null;
+  }
+  if (noOutputTimeout) {
+    clearTimeout(noOutputTimeout);
+    noOutputTimeout = null;
   }
 
   // Unregister cell from registry
