@@ -21,9 +21,10 @@
  * ```
  */
 
+import { computed } from "vue";
 import MarimoLive from "./MarimoLive.vue";
 
-defineProps<{
+const props = defineProps<{
   /** Required: Cell name, ID, or index from the notebook */
   cell: string;
   /** Show the code editor (default: true) */
@@ -31,8 +32,16 @@ defineProps<{
   /** Auto-execute on mount (default: true) */
   autoRun?: boolean;
 }>();
+
+// Only include props that are explicitly set to avoid overriding MarimoLive defaults
+const boundProps = computed(() => {
+  const result: Record<string, unknown> = { cell: props.cell };
+  if (props.displayCode !== undefined) result.displayCode = props.displayCode;
+  if (props.autoRun !== undefined) result.autoRun = props.autoRun;
+  return result;
+});
 </script>
 
 <template>
-  <MarimoLive :cell="cell" :displayCode="displayCode" :autoRun="autoRun" />
+  <MarimoLive v-bind="boundProps" />
 </template>

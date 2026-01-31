@@ -55,34 +55,55 @@ export default definePreparserSetup(() => {
               });
             }
 
-            // Build component tag - inline code only
             const code = codeLines.join("\n").trimEnd();
-            if (!code) {
-              // Empty code block - skip it
+            let componentTag: string;
+
+            // Handle cell references (deprecated - prefer <MarimoCell> component)
+            if (flags.cell) {
+              // Backward compatibility: convert to MarimoCell component
+              componentTag = `<MarimoCell cell="${flags.cell}"`;
+
+              // Add other flags (excluding cell which is already handled)
+              for (const [key, value] of Object.entries(flags)) {
+                if (key === "cell") continue;
+                if (value === "true" || value === "false") {
+                  componentTag += ` :${key}="${value}"`;
+                } else {
+                  componentTag += ` ${key}="${value}"`;
+                }
+              }
+              componentTag += " />";
+
+              // Add deprecation comment
+              result.push(
+                `<!-- DEPRECATED: Use <MarimoCell cell="${flags.cell}" /> instead of code fence syntax -->`
+              );
+            } else if (code) {
+              // Inline code - use MarimoLive
+              const escapedCode = code
+                .replace(/"/g, "&quot;")
+                .replace(/\n/g, "&#10;");
+              componentTag = `<MarimoLive code="${escapedCode}"`;
+
+              // Add flags
+              for (const [key, value] of Object.entries(flags)) {
+                if (value === "true" || value === "false") {
+                  componentTag += ` :${key}="${value}"`;
+                } else if (key === "hideLines") {
+                  componentTag += ` :hide-lines="${value}"`;
+                } else if (key === "codePosition") {
+                  componentTag += ` code-position="${value}"`;
+                } else if (key === "cellId") {
+                  componentTag += ` cell-id="${value}"`;
+                } else {
+                  componentTag += ` ${key}="${value}"`;
+                }
+              }
+              componentTag += " />";
+            } else {
+              // Empty code block with no cell reference - skip
               continue;
             }
-
-            const escapedCode = code
-              .replace(/"/g, "&quot;")
-              .replace(/\n/g, "&#10;");
-            let componentTag = `<MarimoLive code="${escapedCode}"`;
-
-            // Add flags
-            for (const [key, value] of Object.entries(flags)) {
-              if (value === "true" || value === "false") {
-                componentTag += ` :${key}="${value}"`;
-              } else if (key === "hideLines") {
-                componentTag += ` :hide-lines="${value}"`;
-              } else if (key === "codePosition") {
-                componentTag += ` code-position="${value}"`;
-              } else if (key === "cellId") {
-                componentTag += ` cell-id="${value}"`;
-              } else {
-                componentTag += ` ${key}="${value}"`;
-              }
-            }
-
-            componentTag += " />";
 
             // Add the MarimoLive component
             result.push(componentTag);

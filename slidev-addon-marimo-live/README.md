@@ -96,6 +96,8 @@ def plot_chart():  # <- This becomes the cell name
 | `displayCode` | `true` | Show the code editor |
 | `autoRun` | `true` | Auto-execute on slide load |
 
+**Note:** For boolean `false` values, use the `:` prefix (Vue binding syntax): `:displayCode="false"`. Props default to `true` so you can omit them entirely when you want the default behavior.
+
 ### Vue Component (Advanced)
 
 You can also use the components directly in Vue:
