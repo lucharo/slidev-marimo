@@ -119,11 +119,14 @@ export function loadMarimoResources(): void {
   katex.crossOrigin = "anonymous";
   document.head.appendChild(katex);
 
-  // Prism.js for syntax highlighting (Tomorrow Night theme)
+  // Prism.js for syntax highlighting
+  // Use light theme (prism) for light mode, dark theme (prism-tomorrow) for dark mode
   const prismCss = document.createElement("link");
   prismCss.rel = "stylesheet";
-  prismCss.href =
-    "https://cdn.jsdelivr.net/npm/prismjs@1.29.0/themes/prism-tomorrow.min.css";
+  const isDarkMode = document.documentElement.classList.contains("dark");
+  prismCss.href = isDarkMode
+    ? "https://cdn.jsdelivr.net/npm/prismjs@1.29.0/themes/prism-tomorrow.min.css"
+    : "https://cdn.jsdelivr.net/npm/prismjs@1.29.0/themes/prism.min.css";
   document.head.appendChild(prismCss);
 
   // Load Prism core first, then Python language support

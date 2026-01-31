@@ -35,10 +35,7 @@ mo.hstack([slider, dropdown, date])
 
 ```marimo displayCode=false
 mo.md(f'''
-**Values:**
-- Slider: {slider.value}
-- Dropdown: {dropdown.value}
-- Date: {date.value}
+**Values:** Slider: {slider.value} | Dropdown: {dropdown.value} | Date: {date.value}
 ''')
 ```
 
@@ -51,12 +48,9 @@ Draw your data, see it plotted! Built with [wigglystuff](https://github.com/koan
 <div class="grid grid-cols-2 gap-8">
 <div>
 
-```marimo displayCode=false
+```marimo hideLines=1,2
 import micropip
 await micropip.install(['drawdata']);
-```
-
-```marimo
 from drawdata import ScatterWidget
 widget = mo.ui.anywidget(ScatterWidget())
 widget
@@ -84,7 +78,7 @@ else:
 
 # DataFrame component
 
-Using marimo's built-in dataframe explorer
+Using marimo's built-in dataframe explorer - try sorting by clicking column headers!
 
 ```marimo
 import pandas as pd

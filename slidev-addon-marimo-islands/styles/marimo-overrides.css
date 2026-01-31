@@ -4,56 +4,27 @@
  * Customizes marimo's default styling for Slidev presentations.
  * Hides unnecessary UI elements and provides clean presentation aesthetics.
  *
- * Light mode uses Catppuccin Latte theme for syntax highlighting.
- * https://github.com/catppuccin/catppuccin
+ * Tip: For code display, use Slidev's native Python code blocks alongside
+ * marimo cells with displayCode=false. This gives the best syntax highlighting.
  */
 
 /* ============================================
  * CSS Custom Properties for theming
- * Values extracted from marimo's style.css to ensure compatibility
  * ============================================ */
 :root {
-  /* Light mode defaults - Catppuccin Latte base colors */
-  --marimo-output-bg: #eff1f5;  /* Latte Base */
-  --marimo-output-fg: #4c4f69;  /* Latte Text */
-  --marimo-table-header-bg: #ccd0da;  /* Latte Surface 0 */
-  --marimo-table-border: #bcc0cc;  /* Latte Surface 1 */
+  /* Light mode defaults */
+  --marimo-output-bg: var(--slidev-code-background, #f8f9fa);
+  --marimo-output-fg: #0f172a;
+  --marimo-table-header-bg: rgba(0, 0, 0, 0.05);
+  --marimo-table-border: rgba(0, 0, 0, 0.1);
 
-  /* Marimo UI component colors - Catppuccin Latte */
-  --primary: #1e66f5;  /* Latte Blue */
-  --accent: #e6e9ef;  /* Latte Mantle */
-  --ring: #8c8fa1;  /* Latte Overlay 1 */
-  --background: #eff1f5;  /* Latte Base */
-  --foreground: #4c4f69;  /* Latte Text */
-  --accent-foreground: #4c4f69;  /* Latte Text */
-
-  /* Catppuccin Latte syntax highlighting colors */
-  --ctp-rosewater: #dc8a78;
-  --ctp-flamingo: #dd7878;
-  --ctp-pink: #ea76cb;
-  --ctp-mauve: #8839ef;
-  --ctp-red: #d20f39;
-  --ctp-maroon: #e64553;
-  --ctp-peach: #fe640b;
-  --ctp-yellow: #df8e1d;
-  --ctp-green: #40a02b;
-  --ctp-teal: #179299;
-  --ctp-sky: #04a5e5;
-  --ctp-sapphire: #209fb5;
-  --ctp-blue: #1e66f5;
-  --ctp-lavender: #7287fd;
-  --ctp-text: #4c4f69;
-  --ctp-subtext1: #5c5f77;
-  --ctp-subtext0: #6c6f85;
-  --ctp-overlay2: #7c7f93;
-  --ctp-overlay1: #8c8fa1;
-  --ctp-overlay0: #9ca0b0;
-  --ctp-surface2: #acb0be;
-  --ctp-surface1: #bcc0cc;
-  --ctp-surface0: #ccd0da;
-  --ctp-base: #eff1f5;
-  --ctp-mantle: #e6e9ef;
-  --ctp-crust: #dce0e8;
+  /* Marimo UI component colors */
+  --primary: #0880ea;
+  --accent: #edf6ff;
+  --ring: #94a3b8;
+  --background: #fff;
+  --foreground: #0f172a;
+  --accent-foreground: #0f172a;
 }
 
 /* Dark mode values */
@@ -209,89 +180,8 @@ marimo-island .marimo-code-editor:empty + marimo-cell-output {
 }
 
 /* ============================================
- * Catppuccin Latte Syntax Highlighting (Light Mode)
- * Applied to marimo's CodeMirror editor
+ * Note: For code display, use Slidev's native Python
+ * code blocks with displayCode=false on marimo cells.
+ * This gives the best syntax highlighting in both
+ * light and dark modes without fighting marimo's theming.
  * ============================================ */
-
-/* Keywords: import, from, as, def, class, return, if, else, etc. */
-marimo-island .cm-keyword,
-marimo-island .tok-keyword {
-  color: var(--ctp-mauve) !important;
-}
-
-/* Definitions: function and class names at definition */
-marimo-island .cm-def,
-marimo-island .tok-definition {
-  color: var(--ctp-blue) !important;
-}
-
-/* Functions and method calls */
-marimo-island .cm-builtin,
-marimo-island .tok-function {
-  color: var(--ctp-blue) !important;
-}
-
-/* Strings */
-marimo-island .cm-string,
-marimo-island .cm-string-2,
-marimo-island .tok-string {
-  color: var(--ctp-green) !important;
-}
-
-/* Numbers */
-marimo-island .cm-number,
-marimo-island .tok-number {
-  color: var(--ctp-peach) !important;
-}
-
-/* Comments */
-marimo-island .cm-comment,
-marimo-island .tok-comment {
-  color: var(--ctp-overlay1) !important;
-  font-style: italic;
-}
-
-/* Variables and identifiers */
-marimo-island .cm-variable,
-marimo-island .cm-variable-2,
-marimo-island .cm-variable-3,
-marimo-island .tok-variableName {
-  color: var(--ctp-text) !important;
-}
-
-/* Properties and attributes */
-marimo-island .cm-property,
-marimo-island .tok-propertyName {
-  color: var(--ctp-lavender) !important;
-}
-
-/* Operators */
-marimo-island .cm-operator,
-marimo-island .tok-operator {
-  color: var(--ctp-sky) !important;
-}
-
-/* Punctuation: brackets, commas, etc. */
-marimo-island .cm-punctuation,
-marimo-island .tok-punctuation {
-  color: var(--ctp-overlay2) !important;
-}
-
-/* Types and classes */
-marimo-island .cm-type,
-marimo-island .tok-typeName {
-  color: var(--ctp-yellow) !important;
-}
-
-/* Special: self, None, True, False */
-marimo-island .cm-atom,
-marimo-island .tok-atom,
-marimo-island .tok-bool {
-  color: var(--ctp-peach) !important;
-}
-
-/* Decorators */
-marimo-island .cm-meta,
-marimo-island .tok-meta {
-  color: var(--ctp-pink) !important;
-}
