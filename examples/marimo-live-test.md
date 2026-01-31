@@ -2,151 +2,162 @@
 theme: default
 addons:
   - slidev-marimo-live
+highlighter: shiki
 ---
 
-# Marimo Live Bug Fix Validation
+# Marimo Live
 
-Testing the 5 bug fixes in slidev-addon-marimo-live
-
----
-
-# Test 1: Double Execution Prevention
-
-Click the Run button multiple times rapidly. Should only execute once.
-
-```marimo-live autoRun=false
-import time
-print(f"Executed at: {time.time()}")
-```
-
-**Expected:** Console shows single execution, not multiple.
+Interactive Python notebooks embedded in your slides
 
 ---
 
-# Test 2: Plain Text Output
+# Interactive Slider
 
-Basic text output with auto-run.
-
-```marimo-live
-print("Hello from marimo!")
-print("Plain text output works!")
-```
-
----
-
-# Test 3: Markdown Mimetype Support
-
-Tests that markdown content renders correctly.
+Drag the slider and watch the output update in real-time.
 
 ```marimo-live
 import marimo as mo
-mo.md("""
-# Markdown Test
-
-This is **bold** and this is *italic*.
-
-- Item 1
-- Item 2
-- Item 3
-""")
-```
-
-**Expected:** Rendered markdown with headings, bold, italic, and list.
-
----
-
-# Test 4: JSON Output Handling
-
-Tests valid JSON formatting.
-
-```marimo-live
-import json
-data = {"name": "test", "values": [1, 2, 3], "nested": {"a": 1, "b": 2}}
-print(json.dumps(data))
-```
-
-**Expected:** Pretty-printed JSON output.
-
----
-
-# Test 5: Inline Code with Manual Run
-
-Inline code (not from notebook) to test auto-run=false.
-
-```marimo-live autoRun=false
-print("Manual run test")
-import json
-# This outputs invalid JSON-like string to test error handling
-print("{not valid json")
-```
-
-**Expected:** Click Run to execute. Invalid JSON shows as raw text.
-
----
-
-# Test 6: Interactive Slider
-
-Interactive widget to test UI element communication.
-
-```marimo-live
-import marimo as mo
-slider = mo.ui.slider(0, 100, value=50, label="Value")
+slider = mo.ui.slider(1, 100, value=50, label="Select a number")
 slider
 ```
 
 ```marimo-live
 import marimo as mo
-mo.md(f"Slider interaction test")
+squared = slider.value ** 2
+mo.md(f"**Value:** {slider.value} | **Squared:** {squared}")
 ```
 
 ---
 
-# Test 7: Timeout Cleanup Test
+# Dropdown + Altair Chart
 
-Navigate away from this slide and back.
-No console errors should appear about unmounted components.
+Select a column to visualize from the Titanic dataset.
 
-```marimo-live autoRun=true
-print("Timeout cleanup test cell")
+```marimo-live
+import marimo as mo
+dropdown = mo.ui.dropdown(
+    options=["Survived", "Pclass", "Sex", "Age", "Fare"],
+    value="Survived",
+    label="Select column"
+)
+dropdown
 ```
 
-**Instructions:**
-1. Navigate to next slide
-2. Come back
-3. Check browser console for cleanup errors
+```marimo-live
+import marimo as mo
+import polars as pl
+import altair as alt
 
----
+url = "https://raw.githubusercontent.com/datasciencedojo/datasets/master/titanic.csv"
+titanic = pl.read_csv(url)
+col = dropdown.value
 
-# Test 8: Reconnection Test
+if col in ["Age", "Fare"]:
+    chart = alt.Chart(titanic.to_pandas()).mark_bar().encode(
+        alt.X(f"{col}:Q", bin=True), y="count()"
+    ).properties(width=500, height=250)
+else:
+    chart = alt.Chart(titanic.to_pandas()).mark_bar().encode(
+        x=f"{col}:N", y="count()"
+    ).properties(width=500, height=250)
 
-Test that reconnection works after disconnect.
-
-```marimo-live autoRun=false
-import time
-print(f"Reconnection test: {time.time()}")
+mo.ui.altair_chart(chart)
 ```
 
-**Instructions:**
-1. Stop the marimo kernel (Ctrl+C in terminal)
-2. Wait for "Not connected" warning
-3. Restart kernel
-4. Click Reconnect button
-5. Verify it reconnects and works
+---
+
+# Data Explorer
+
+Browse and filter the Titanic dataset interactively.
+
+```marimo-live
+import marimo as mo
+import polars as pl
+
+url = "https://raw.githubusercontent.com/datasciencedojo/datasets/master/titanic.csv"
+titanic = pl.read_csv(url)
+mo.ui.dataframe(titanic)
+```
 
 ---
 
-# Summary
+# Checkbox & Switch
 
-| Bug Fix | Test Method |
-|---------|-------------|
-| Double execution race | Rapid click Run button on slide 2 |
-| Timeout cleanup | Navigate between slides 7-8, check console |
-| reconnectAttempts reset | Disconnect/reconnect on slide 8 |
-| JSON parse error | Run invalid JSON code on slide 5 |
-| Markdown mimetype | View rendered markdown on slide 3 |
+Toggle states that react immediately.
+
+```marimo-live
+import marimo as mo
+check = mo.ui.checkbox(label="Enable feature")
+switch = mo.ui.switch(label="Dark mode")
+mo.hstack([check, switch])
+```
+
+```marimo-live
+import marimo as mo
+mo.md(f"Checkbox: **{check.value}** | Switch: **{switch.value}**")
+```
 
 ---
 
-# End
+# Text Input
 
-All tests completed!
+Type your name and see a greeting.
+
+```marimo-live
+import marimo as mo
+text = mo.ui.text(placeholder="Type something...", label="Name")
+text
+```
+
+```marimo-live
+import marimo as mo
+if text.value:
+    mo.md(f"# Hello, {text.value}!")
+else:
+    mo.md("_Enter your name above_")
+```
+
+---
+
+# How It Works
+
+```
+┌─────────────────┐     WebSocket      ┌─────────────────┐
+│   Slidev        │◄──────────────────►│  Marimo Kernel  │
+│   (Browser)     │                    │  (Python)       │
+└─────────────────┘                    └─────────────────┘
+```
+
+- Full Python kernel running locally
+- Any package: polars, altair, scikit-learn...
+- UI elements sync bidirectionally
+- Cells react to each other automatically
+
+---
+
+# Get Started
+
+```bash
+# Start the marimo kernel
+marimo edit notebook.py --headless --port 2718 --no-token --allow-origins "*"
+
+# Start slidev
+slidev slides.md
+```
+
+Add the addon to your slides:
+
+```yaml
+---
+addons:
+  - slidev-marimo-live
+---
+```
+
+---
+
+# Thanks!
+
+**slidev-addon-marimo-live**
+
+Live Python notebooks in your presentations.
