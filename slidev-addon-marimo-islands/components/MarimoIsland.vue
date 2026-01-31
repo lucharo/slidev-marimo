@@ -97,8 +97,9 @@ async function findIsland(
       `marimo-island[data-marker-id="${id}"]`,
     );
     if (island) return island;
-    if (attempt > 0 && attempt % 3 === 0) {
-      console.debug(`🔍 Island ${id}: retry ${attempt + 1}/${maxAttempts}...`);
+    // Log progress every 3rd attempt (attempts 3, 6, 9 in 1-indexed display)
+    if ((attempt + 1) % 3 === 0) {
+      console.debug(`🔍 Island ${id}: attempt ${attempt + 1}/${maxAttempts}...`);
     }
     await new Promise((r) => setTimeout(r, intervalMs));
   }

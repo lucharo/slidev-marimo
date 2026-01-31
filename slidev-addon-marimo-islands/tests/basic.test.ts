@@ -50,10 +50,10 @@ describe("slidev-marimo-islands", () => {
   });
 
   afterEach(() => {
-    // Restore original globals after each test
-    global.document = originalDocument;
-    global.window = originalWindow;
-    global.customElements = originalCustomElements;
+    // Restore original globals after each test (only if they were defined)
+    if (originalDocument !== undefined) global.document = originalDocument;
+    if (originalWindow !== undefined) global.window = originalWindow;
+    if (originalCustomElements !== undefined) global.customElements = originalCustomElements;
   });
 
   describe("MarimoIsland Component", () => {
