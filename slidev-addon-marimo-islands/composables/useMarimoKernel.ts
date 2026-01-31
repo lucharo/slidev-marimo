@@ -16,7 +16,7 @@
  */
 
 import type { App, InjectionKey } from "vue";
-import { inject, reactive, readonly } from "vue";
+import { inject, reactive } from "vue";
 
 export type KernelState = "idle" | "loading" | "ready" | "error";
 

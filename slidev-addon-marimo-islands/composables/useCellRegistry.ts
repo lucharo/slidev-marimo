@@ -19,7 +19,7 @@
  */
 
 import type { App, InjectionKey } from "vue";
-import { inject, reactive, readonly } from "vue";
+import { inject, reactive } from "vue";
 import { generateCellId, releaseCellId, resetCellIds } from "../utils/cellId";
 
 export type CellState =

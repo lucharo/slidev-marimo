@@ -228,14 +228,31 @@ function loadMarimoScript(kernel: MarimoKernel): Promise<void> {
  * Set up listener for kernel-ready message from marimo worker.
  */
 function setupKernelReadyListener(kernel: MarimoKernel): void {
+  // Track polling interval so we can clear it when ready
+  let pollingInterval: ReturnType<typeof setInterval> | null = null;
+  let pollingTimeout: ReturnType<typeof setTimeout> | null = null;
+
+  const stopPolling = () => {
+    if (pollingInterval) {
+      clearInterval(pollingInterval);
+      pollingInterval = null;
+    }
+    if (pollingTimeout) {
+      clearTimeout(pollingTimeout);
+      pollingTimeout = null;
+    }
+  };
+
   // Marimo sends messages from its web worker
   window.addEventListener("message", (event) => {
     // Check for marimo kernel ready message
+    // Use explicit parentheses for clarity on precedence
     if (
       event.data &&
       (event.data.type === "kernel-ready" ||
-        event.data.channel === "marimo" && event.data.type === "ready")
+        (event.data.channel === "marimo" && event.data.type === "ready"))
     ) {
+      stopPolling();
       kernel.markReady();
     }
   });
@@ -244,6 +261,7 @@ function setupKernelReadyListener(kernel: MarimoKernel): void {
   // The marimo-island custom element is defined when the kernel is ready
   const checkCustomElement = () => {
     if (customElements.get("marimo-island")) {
+      stopPolling();
       kernel.markReady();
       return true;
     }
@@ -252,14 +270,14 @@ function setupKernelReadyListener(kernel: MarimoKernel): void {
 
   // Poll for custom element registration
   if (!checkCustomElement()) {
-    const interval = setInterval(() => {
+    pollingInterval = setInterval(() => {
       if (checkCustomElement()) {
-        clearInterval(interval);
+        // checkCustomElement already calls stopPolling
       }
     }, 100);
 
     // Stop polling after 60 seconds
-    setTimeout(() => clearInterval(interval), 60000);
+    pollingTimeout = setTimeout(stopPolling, 60000);
   }
 }
 
