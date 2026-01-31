@@ -318,10 +318,26 @@ export async function initializeMarimoIslands(
   // Step 2: Create island elements from registry BEFORE loading script
   createIslandElements(registry);
 
-  // Step 3: Set up kernel ready listener
+  // Step 3: Wait for any additional cells that might be mounting
+  // Slidev lazy-loads slides, so more cells may register during this delay
+  console.log("⏳ Waiting for additional cells to register...");
+  await new Promise((resolve) => setTimeout(resolve, 1000));
+
+  // Step 4: Create any additional islands that registered during the delay
+  const additionalCells = registry.getAllCells().filter(
+    (cell) => cell.state === "pending"
+  );
+  if (additionalCells.length > 0) {
+    console.log(`🏝️ Creating ${additionalCells.length} additional island elements...`);
+    for (const cell of additionalCells) {
+      createSingleIsland(registry, cell.id);
+    }
+  }
+
+  // Step 5: Set up kernel ready listener
   setupKernelReadyListener(kernel);
 
-  // Step 4: Load the marimo script (it will parse existing islands)
+  // Step 6: Load the marimo script (it will parse existing islands)
   await loadMarimoScript(kernel);
 
   console.log("✓ Marimo initialization complete, waiting for kernel...");

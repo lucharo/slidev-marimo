@@ -72,6 +72,11 @@ function setupCellStabilityCheck(
     totalChecks++;
     const currentCount = registry.getCellCount();
 
+    // Debug logging every 10 checks
+    if (totalChecks % 10 === 0) {
+      console.log(`⏱️ Stability check #${totalChecks}: ${currentCount} cells, stable for ${stableChecks} checks`);
+    }
+
     if (currentCount === lastCount) {
       // Count is stable - increment stability counter
       stableChecks++;
@@ -87,6 +92,7 @@ function setupCellStabilityCheck(
       // If stable but count=0, keep checking (components may not have mounted yet)
     } else {
       // Count changed - reset stability counter
+      console.log(`⏱️ Cell count changed: ${lastCount} → ${currentCount}`);
       stableChecks = 0;
       lastCount = currentCount;
     }
