@@ -18,6 +18,26 @@
 
 import { definePreparserSetup } from "@slidev/types";
 
+/**
+ * Format a flag key-value pair for use in a Vue component tag.
+ * Handles special cases like boolean values and kebab-case conversions.
+ */
+function formatFlag(key: string, value: string): string {
+  if (value === "true" || value === "false") {
+    return ` :${key}="${value}"`;
+  }
+  if (key === "hideLines") {
+    return ` :hide-lines="${value}"`;
+  }
+  if (key === "codePosition") {
+    return ` code-position="${value}"`;
+  }
+  if (key === "cellId") {
+    return ` cell-id="${value}"`;
+  }
+  return ` ${key}="${value}"`;
+}
+
 export default definePreparserSetup(() => {
   return [
     {
@@ -60,24 +80,20 @@ export default definePreparserSetup(() => {
 
             // Handle cell references (deprecated - prefer <MarimoCell> component)
             if (flags.cell) {
+              // Log deprecation warning at build time
+              console.warn(
+                `[slidev-marimo-live] Deprecated: Use <MarimoCell cell="${flags.cell}" /> instead of \`\`\`marimo-live cell=${flags.cell}`
+              );
+
               // Backward compatibility: convert to MarimoCell component
               componentTag = `<MarimoCell cell="${flags.cell}"`;
 
               // Add other flags (excluding cell which is already handled)
               for (const [key, value] of Object.entries(flags)) {
                 if (key === "cell") continue;
-                if (value === "true" || value === "false") {
-                  componentTag += ` :${key}="${value}"`;
-                } else {
-                  componentTag += ` ${key}="${value}"`;
-                }
+                componentTag += formatFlag(key, value);
               }
               componentTag += " />";
-
-              // Add deprecation comment
-              result.push(
-                `<!-- DEPRECATED: Use <MarimoCell cell="${flags.cell}" /> instead of code fence syntax -->`
-              );
             } else if (code) {
               // Inline code - use MarimoLive
               const escapedCode = code
@@ -87,17 +103,7 @@ export default definePreparserSetup(() => {
 
               // Add flags
               for (const [key, value] of Object.entries(flags)) {
-                if (value === "true" || value === "false") {
-                  componentTag += ` :${key}="${value}"`;
-                } else if (key === "hideLines") {
-                  componentTag += ` :hide-lines="${value}"`;
-                } else if (key === "codePosition") {
-                  componentTag += ` code-position="${value}"`;
-                } else if (key === "cellId") {
-                  componentTag += ` cell-id="${value}"`;
-                } else {
-                  componentTag += ` ${key}="${value}"`;
-                }
+                componentTag += formatFlag(key, value);
               }
               componentTag += " />";
             } else {
