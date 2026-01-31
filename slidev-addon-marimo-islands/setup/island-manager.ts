@@ -57,6 +57,8 @@ function installBridgeTrap(): void {
       // Patch synchronously using the central patch function
       if (newBridge && patchKernelMessages()) {
         console.log("✓ Bridge patched on creation via trap");
+      } else if (newBridge) {
+        console.debug("Bridge trap: patch already applied or bridge not ready");
       }
     },
   });
