@@ -196,6 +196,7 @@ onMounted(() => {
     let unwatchConnection: (() => void) | null = null;
 
     const cleanup = () => {
+      if (autoRunTimeout) { clearTimeout(autoRunTimeout); autoRunTimeout = null; }
       if (unwatch) { unwatch(); unwatch = null; }
       if (unwatchConnection) { unwatchConnection(); unwatchConnection = null; }
     };

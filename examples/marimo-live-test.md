@@ -29,9 +29,23 @@ mo.md(f"**Value:** {slider.value} | **Squared:** {squared}")
 
 ---
 
+# Load Data
+
+First, let's load the Titanic dataset (shared across slides).
+
+```marimo-live
+import polars as pl
+
+url = "https://raw.githubusercontent.com/datasciencedojo/datasets/master/titanic.csv"
+titanic = pl.read_csv(url)
+titanic.head()
+```
+
+---
+
 # Dropdown + Altair Chart
 
-Select a column to visualize from the Titanic dataset.
+Select a column to visualize.
 
 ```marimo-live
 import marimo as mo
@@ -45,12 +59,9 @@ dropdown
 
 ```marimo-live
 import marimo as mo
-import polars as pl
 import altair as alt
 
-url = "https://raw.githubusercontent.com/datasciencedojo/datasets/master/titanic.csv"
-titanic = pl.read_csv(url)
-col = dropdown.value
+col = dropdown.value or "Survived"
 
 if col in ["Age", "Fare"]:
     chart = alt.Chart(titanic.to_pandas()).mark_bar().encode(
@@ -72,10 +83,6 @@ Browse and filter the Titanic dataset interactively.
 
 ```marimo-live
 import marimo as mo
-import polars as pl
-
-url = "https://raw.githubusercontent.com/datasciencedojo/datasets/master/titanic.csv"
-titanic = pl.read_csv(url)
 mo.ui.dataframe(titanic)
 ```
 
@@ -139,7 +146,7 @@ else:
 
 ```bash
 # Start the marimo kernel
-marimo edit notebook.py --headless --port 2718 --no-token --allow-origins "*"
+marimo edit notebook.py --sandbox --headless --port 2718 --no-token --allow-origins "*"
 
 # Start slidev
 slidev slides.md
