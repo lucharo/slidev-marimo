@@ -74,18 +74,23 @@ export function loadMarimoResources(): void {
     "https://cdn.jsdelivr.net/npm/prismjs@1.29.0/themes/prism-tomorrow.min.css";
   document.head.appendChild(prismCss);
 
+  // Load Prism core first, then Python language support
   const prismJs = document.createElement("script");
   prismJs.src =
     "https://cdn.jsdelivr.net/npm/prismjs@1.29.0/prism.min.js";
-  prismJs.defer = true;
+  prismJs.onload = () => {
+    // Load Python language component after core is ready
+    const prismPython = document.createElement("script");
+    prismPython.src =
+      "https://cdn.jsdelivr.net/npm/prismjs@1.29.0/components/prism-python.min.js";
+    prismPython.onload = () => {
+      // Dispatch event so components know Prism is fully ready
+      window.dispatchEvent(new Event("prism-ready"));
+      console.log("✓ Prism.js loaded with Python support");
+    };
+    document.head.appendChild(prismPython);
+  };
   document.head.appendChild(prismJs);
-
-  // Prism Python language support
-  const prismPython = document.createElement("script");
-  prismPython.src =
-    "https://cdn.jsdelivr.net/npm/prismjs@1.29.0/components/prism-python.min.js";
-  prismPython.defer = true;
-  document.head.appendChild(prismPython);
 
   // Marimo islands CSS
   const link = document.createElement("link");

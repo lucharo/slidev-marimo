@@ -95,7 +95,7 @@ const highlightCode = async () => {
   if (codeElement.value && typeof window !== "undefined") {
     // Use Prism if available (loaded by setup)
     const Prism = (window as any).Prism;
-    if (Prism) {
+    if (Prism?.languages?.python) {
       Prism.highlightElement(codeElement.value);
     }
   }
@@ -103,6 +103,11 @@ const highlightCode = async () => {
 
 // Watch for code element and highlight
 watch(codeElement, highlightCode);
+
+// Listen for Prism ready event (fired after Python language loads)
+if (typeof window !== "undefined") {
+  window.addEventListener("prism-ready", highlightCode, { once: true });
+}
 
 // Observers and handlers for cleanup
 let observer: IntersectionObserver | null = null;
