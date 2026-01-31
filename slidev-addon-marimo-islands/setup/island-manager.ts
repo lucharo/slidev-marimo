@@ -54,22 +54,9 @@ function installBridgeTrap(): void {
       console.log("🎯 Bridge being created, intercepting...");
       _bridge = newBridge;
 
-      // Patch synchronously - we need to wrap putControlRequest
-      // BEFORE marimo calls it for the first time
-      if (newBridge && typeof newBridge.putControlRequest === "function") {
-        const originalPut = newBridge.putControlRequest.bind(newBridge);
-        newBridge.putControlRequest = async (request: unknown) => {
-          // Add type field if missing
-          if (request && typeof request === "object" && !("type" in request)) {
-            const req = request as Record<string, unknown>;
-            if (Array.isArray(req.objectIds) && Array.isArray(req.values)) {
-              console.debug('🔧 Inline patch: adding type="update-ui-element"');
-              return originalPut({ type: "update-ui-element", ...req });
-            }
-          }
-          return originalPut(request);
-        };
-        console.log("✓ Bridge patched inline on creation");
+      // Patch synchronously using the central patch function
+      if (newBridge && patchKernelMessages()) {
+        console.log("✓ Bridge patched on creation via trap");
       }
     },
   });
@@ -358,8 +345,8 @@ function applyKernelPatch(): void {
   }
 
   let attempts = 0;
-  const maxAttempts = 500; // 5 seconds at 10ms intervals
-  const retryInterval = 10; // Poll aggressively to catch bridge creation
+  const maxAttempts = 100; // 5 seconds at 50ms intervals
+  const retryInterval = 50; // Fallback polling (trap should handle most cases)
 
   const tryPatch = () => {
     attempts++;
@@ -538,12 +525,13 @@ export function cleanupMarimo(): void {
 // HMR: Force full page reload when this file changes
 // Marimo kernel state cannot be hot-reloaded
 if (import.meta.hot) {
-  // Clean up pending timeouts before reload
+  // Clean up state before reload
   import.meta.hot.dispose(() => {
     if (patchRetryTimeout) {
       clearTimeout(patchRetryTimeout);
       patchRetryTimeout = null;
     }
+    bridgeTrapInstalled = false;
   });
   import.meta.hot.decline();
 }
