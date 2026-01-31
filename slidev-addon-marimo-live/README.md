@@ -31,11 +31,20 @@ Add to your presentation's `package.json`:
 ### 2. Start the marimo server
 
 ```bash
-# Using the provided script
-./slidev-addon-marimo-live/scripts/start-kernel.sh notebook.py
+# With sandbox mode (recommended - auto-installs deps from notebook)
+marimo edit notebook.py --sandbox --headless --port 2718 --no-token --allow-origins "*"
 
-# Or manually
+# Or without sandbox (requires deps pre-installed)
 marimo edit notebook.py --headless --port 2718 --no-token --allow-origins "*"
+```
+
+For sandbox mode, add a PEP 723 header to your notebook:
+
+```python
+# /// script
+# requires-python = ">=3.11"
+# dependencies = ["marimo", "polars", "altair"]
+# ///
 ```
 
 ### 3. Use in your slides
