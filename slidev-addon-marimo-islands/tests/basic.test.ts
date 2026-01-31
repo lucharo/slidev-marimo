@@ -1,6 +1,11 @@
 /**
- * Basic functionality tests for slidev-marimo-islands
- * Tests core functionality without over-engineering
+ * Tests for slidev-marimo-islands refactored architecture
+ *
+ * Tests cover:
+ * - Cell ID generation (4-char alphanumeric format)
+ * - Kernel state management
+ * - Cell registry operations
+ * - hideLines normalization
  */
 
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
@@ -15,14 +20,23 @@ const mockDom = () => {
   global.document = {
     createElement: vi.fn(() => ({
       hidden: false,
+      textContent: "",
+      style: {},
       setAttribute: vi.fn(),
       appendChild: vi.fn(),
       querySelector: vi.fn(() => null),
+      querySelectorAll: vi.fn(() => []),
+      classList: { add: vi.fn(), contains: vi.fn() },
     })),
     head: {
       appendChild: vi.fn(),
     },
+    body: {
+      appendChild: vi.fn(),
+    },
     querySelector: vi.fn(() => null),
+    querySelectorAll: vi.fn(() => []),
+    getElementById: vi.fn(() => null),
   } as any;
 
   global.window = {
@@ -33,7 +47,8 @@ const mockDom = () => {
     location: {
       href: "http://localhost:3000",
     },
-    setTimeout: vi.fn(),
+    setTimeout: vi.fn((fn) => fn()),
+    addEventListener: vi.fn(),
   } as any;
 
   global.customElements = global.window.customElements;
@@ -50,170 +65,314 @@ describe("slidev-marimo-islands", () => {
   });
 
   afterEach(() => {
-    // Restore original globals after each test (only if they were defined)
+    // Restore original globals after each test
     if (originalDocument !== undefined) global.document = originalDocument;
     if (originalWindow !== undefined) global.window = originalWindow;
-    if (originalCustomElements !== undefined) global.customElements = originalCustomElements;
+    if (originalCustomElements !== undefined)
+      global.customElements = originalCustomElements;
   });
 
-  describe("MarimoIsland Component", () => {
-    it("should process code correctly", () => {
-      // Test the logic for hiding lines without importing Vue component
+  describe("Cell ID Generator", () => {
+    it("should generate 4-character alphanumeric IDs", async () => {
+      const { generateCellId, resetCellIds } = await import("../utils/cellId");
+      resetCellIds();
+
+      const id = generateCellId();
+      expect(id).toHaveLength(4);
+      expect(id).toMatch(/^[A-Za-z0-9]{4}$/);
+    });
+
+    it("should generate unique IDs", async () => {
+      const { generateCellId, resetCellIds } = await import("../utils/cellId");
+      resetCellIds();
+
+      const ids = new Set<string>();
+      for (let i = 0; i < 100; i++) {
+        ids.add(generateCellId());
+      }
+
+      // All 100 should be unique
+      expect(ids.size).toBe(100);
+    });
+
+    it("should track and release IDs", async () => {
+      const { generateCellId, releaseCellId, isIdUsed, resetCellIds } =
+        await import("../utils/cellId");
+      resetCellIds();
+
+      const id = generateCellId();
+      expect(isIdUsed(id)).toBe(true);
+
+      releaseCellId(id);
+      expect(isIdUsed(id)).toBe(false);
+    });
+
+    it("should reset all IDs", async () => {
+      const { generateCellId, getUsedIdCount, resetCellIds } = await import(
+        "../utils/cellId"
+      );
+      resetCellIds();
+
+      generateCellId();
+      generateCellId();
+      generateCellId();
+      expect(getUsedIdCount()).toBe(3);
+
+      resetCellIds();
+      expect(getUsedIdCount()).toBe(0);
+    });
+  });
+
+  describe("Kernel State Manager", () => {
+    it("should start in idle state", async () => {
+      const { createMarimoKernel } = await import(
+        "../composables/useMarimoKernel"
+      );
+      const kernel = createMarimoKernel();
+
+      expect(kernel.state).toBe("idle");
+      expect(kernel.errorMessage).toBeNull();
+    });
+
+    it("should transition through states correctly", async () => {
+      const { createMarimoKernel } = await import(
+        "../composables/useMarimoKernel"
+      );
+      const kernel = createMarimoKernel();
+
+      kernel.startLoading();
+      expect(kernel.state).toBe("loading");
+
+      kernel.markReady();
+      expect(kernel.state).toBe("ready");
+    });
+
+    it("should handle error state", async () => {
+      const { createMarimoKernel } = await import(
+        "../composables/useMarimoKernel"
+      );
+      const kernel = createMarimoKernel();
+
+      kernel.startLoading();
+      kernel.markError("Test error");
+
+      expect(kernel.state).toBe("error");
+      expect(kernel.errorMessage).toBe("Test error");
+    });
+
+    it("should resolve waitForReady when already ready", async () => {
+      const { createMarimoKernel } = await import(
+        "../composables/useMarimoKernel"
+      );
+      const kernel = createMarimoKernel();
+
+      kernel.startLoading();
+      kernel.markReady();
+
+      await expect(kernel.waitForReady()).resolves.toBeUndefined();
+    });
+
+    it("should reject waitForReady on error", async () => {
+      const { createMarimoKernel } = await import(
+        "../composables/useMarimoKernel"
+      );
+      const kernel = createMarimoKernel();
+
+      kernel.startLoading();
+      kernel.markError("Test error");
+
+      await expect(kernel.waitForReady()).rejects.toThrow("Test error");
+    });
+
+    it("should reset state", async () => {
+      const { createMarimoKernel } = await import(
+        "../composables/useMarimoKernel"
+      );
+      const kernel = createMarimoKernel();
+
+      kernel.startLoading();
+      kernel.markReady();
+      kernel.reset();
+
+      expect(kernel.state).toBe("idle");
+    });
+  });
+
+  describe("Cell Registry", () => {
+    it("should register cells and return IDs", async () => {
+      const { createCellRegistry } = await import(
+        "../composables/useCellRegistry"
+      );
+      // Need to reset cell IDs before creating registry
+      const { resetCellIds } = await import("../utils/cellId");
+      resetCellIds();
+
+      const registry = createCellRegistry();
+
+      const id = registry.registerCell("print('hello')");
+      expect(id).toHaveLength(4);
+      expect(id).toMatch(/^[A-Za-z0-9]{4}$/);
+    });
+
+    it("should track cell state", async () => {
+      const { createCellRegistry } = await import(
+        "../composables/useCellRegistry"
+      );
+      const { resetCellIds } = await import("../utils/cellId");
+      resetCellIds();
+
+      const registry = createCellRegistry();
+
+      const id = registry.registerCell("x = 1");
+      const cell = registry.getCell(id);
+
+      expect(cell).toBeDefined();
+      expect(cell?.state).toBe("pending");
+      expect(cell?.code).toBe("x = 1");
+    });
+
+    it("should update cell state", async () => {
+      const { createCellRegistry } = await import(
+        "../composables/useCellRegistry"
+      );
+      const { resetCellIds } = await import("../utils/cellId");
+      resetCellIds();
+
+      const registry = createCellRegistry();
+
+      const id = registry.registerCell("x = 1");
+      registry.updateCellState(id, "running");
+
+      expect(registry.getCell(id)?.state).toBe("running");
+    });
+
+    it("should unregister cells", async () => {
+      const { createCellRegistry } = await import(
+        "../composables/useCellRegistry"
+      );
+      const { resetCellIds } = await import("../utils/cellId");
+      resetCellIds();
+
+      const registry = createCellRegistry();
+
+      const id = registry.registerCell("x = 1");
+      expect(registry.getCellCount()).toBe(1);
+
+      registry.unregisterCell(id);
+      expect(registry.getCellCount()).toBe(0);
+      expect(registry.getCell(id)).toBeUndefined();
+    });
+
+    it("should get all cells", async () => {
+      const { createCellRegistry } = await import(
+        "../composables/useCellRegistry"
+      );
+      const { resetCellIds } = await import("../utils/cellId");
+      resetCellIds();
+
+      const registry = createCellRegistry();
+
+      registry.registerCell("x = 1");
+      registry.registerCell("y = 2");
+      registry.registerCell("z = 3");
+
+      const cells = registry.getAllCells();
+      expect(cells).toHaveLength(3);
+    });
+
+    it("should reset registry", async () => {
+      const { createCellRegistry } = await import(
+        "../composables/useCellRegistry"
+      );
+      const { resetCellIds } = await import("../utils/cellId");
+      resetCellIds();
+
+      const registry = createCellRegistry();
+
+      registry.registerCell("x = 1");
+      registry.registerCell("y = 2");
+      registry.reset();
+
+      expect(registry.getCellCount()).toBe(0);
+    });
+  });
+
+  describe("hideLines Normalization", () => {
+    it("should handle number type", () => {
+      // Test the normalization logic that's now in the component
+      const hideLines: number | number[] = 1;
+      const normalized =
+        typeof hideLines === "number" ? [hideLines] : hideLines || [];
+
+      expect(normalized).toEqual([1]);
+    });
+
+    it("should handle array type", () => {
+      const hideLines: number | number[] = [1, 3, 5];
+      const normalized =
+        typeof hideLines === "number" ? [hideLines] : hideLines || [];
+
+      expect(normalized).toEqual([1, 3, 5]);
+    });
+
+    it("should handle empty/undefined", () => {
+      const hideLines: number | number[] | undefined = undefined;
+      const normalized =
+        typeof hideLines === "number" ? [hideLines] : hideLines || [];
+
+      expect(normalized).toEqual([]);
+    });
+  });
+
+  describe("Code Processing", () => {
+    it("should filter lines correctly", () => {
       const code =
-        'print("Hello World")\nprint("Should be hidden")\nprint("Should be visible")\nprint("Should be hidden too")';
+        'print("Line 1")\nprint("Line 2")\nprint("Line 3")\nprint("Line 4")';
       const hideLines = [2, 4];
 
-      const expectedProcessed =
-        'print("Hello World")\nprint("Should be visible")';
-
-      // The component should filter out lines 2 and 4
       const lines = code.split("\n");
       const result = lines
         .filter((_, index) => !hideLines.includes(index + 1))
         .join("\n");
 
-      expect(result).toBe(expectedProcessed);
+      expect(result).toBe('print("Line 1")\nprint("Line 3")');
     });
 
-    it("should generate unique island IDs", () => {
-      // Test ID generation logic
-      const mockInstance = { uid: "test-123" };
+    it("should handle empty hideLines", () => {
+      const code = 'print("Hello")';
+      const hideLines: number[] = [];
 
-      const islandId = `island-${mockInstance.uid || Math.random().toString(36).slice(2)}`;
+      const lines = code.split("\n");
+      const result = lines
+        .filter((_, index) => !hideLines.includes(index + 1))
+        .join("\n");
 
-      expect(islandId).toBe("island-test-123");
+      expect(result).toBe(code);
     });
   });
 
-  describe("useIslandState", () => {
-    it("should detect when marimo islands are ready", async () => {
-      const { checkIslandReady } = await import(
-        "../composables/useIslandState"
-      );
-
-      // Initially not ready
-      expect(checkIslandReady()).toBe(false);
-
-      // Mock marimo-island element being registered
-      global.customElements.get.mockReturnValue(() => true);
-
-      expect(checkIslandReady()).toBe(true);
+  describe("Preparser hideLines Normalization", () => {
+    it("should normalize single number to array", () => {
+      // Test the preparser normalization logic
+      const value = "1";
+      const normalized = value.startsWith("[") ? value : `[${value}]`;
+      expect(normalized).toBe("[1]");
     });
 
-    it("should wait until marimo islands are ready", async () => {
-      const { useIslandState } = await import("../composables/useIslandState");
-      const { waitUntilReady } = useIslandState();
-
-      // Mock the custom element to be ready
-      global.customElements.get.mockReturnValue(() => true);
-
-      const result = await waitUntilReady();
-
-      expect(result).toBe(undefined); // waitUntilReady resolves to undefined
+    it("should preserve existing array format", () => {
+      const value = "[1,2,3]";
+      const normalized = value.startsWith("[") ? value : `[${value}]`;
+      expect(normalized).toBe("[1,2,3]");
     });
   });
 
   describe("Integration", () => {
-    it("should integrate with Slidev properly", () => {
-      // Test that the addon can be properly loaded by Slidev
-      // This would require setting up a full Slidev environment
-
-      // For now, just verify the export structure
+    it("should have correct package structure", () => {
       const packageJson = require("../package.json");
 
       expect(packageJson.name).toBe("slidev-marimo-islands");
       expect(packageJson.peerDependencies).toHaveProperty("@slidev/cli");
       expect(packageJson.peerDependencies).toHaveProperty("vue");
-    });
-  });
-
-
-  describe("Island Registry", () => {
-    it("should create island element from a valid marker", async () => {
-      // Set up a more complete DOM mock for this test
-      const appendedChildren: any[] = [];
-
-      global.document.createElement = vi.fn((tag: string) => {
-        const el = {
-          tagName: tag,
-          hidden: false,
-          textContent: "",
-          style: {},
-          setAttribute: vi.fn(),
-          appendChild: vi.fn(() => el),
-          querySelector: vi.fn(() => null),
-          classList: { add: vi.fn(), contains: vi.fn() },
-        };
-        return el;
-      }) as any;
-
-      global.document.body = {
-        appendChild: vi.fn((child) => appendedChildren.push(child)),
-      } as any;
-
-      global.document.querySelector = vi.fn(() => null);
-      global.document.querySelectorAll = vi.fn(() => []);
-
-      const { createIslandFromMarker } = await import(
-        "../setup/island-registry"
-      );
-
-      const marker = {
-        dataset: {
-          islandId: "test-island-1",
-          islandReactive: "true",
-          islandCode: encodeURIComponent('print("hello")'),
-        },
-      };
-
-      const result = createIslandFromMarker(marker as any, 0);
-      expect(result).toBe(true);
-      expect(appendedChildren.length).toBe(1);
-    });
-
-    it("should skip marker without island ID", async () => {
-      global.document.querySelector = vi.fn(() => null);
-
-      const { createIslandFromMarker } = await import(
-        "../setup/island-registry"
-      );
-
-      const marker = { dataset: {} };
-      const result = createIslandFromMarker(marker as any, 0);
-      expect(result).toBe(false);
-    });
-
-    it("should skip marker if island already exists", async () => {
-      global.document.querySelector = vi.fn(() => ({})); // island exists
-
-      const { createIslandFromMarker } = await import(
-        "../setup/island-registry"
-      );
-
-      const marker = {
-        dataset: {
-          islandId: "existing-island",
-          islandCode: encodeURIComponent("x = 1"),
-        },
-      };
-      const result = createIslandFromMarker(marker as any, 0);
-      expect(result).toBe(false);
-    });
-  });
-
-  describe("Performance", () => {
-    it("should handle multiple islands efficiently", async () => {
-      // Test that multiple instances share state properly
-      const { useIslandState } = await import("../composables/useIslandState");
-
-      // Multiple instances should share the same state
-      const state1 = useIslandState();
-      const state2 = useIslandState();
-      const state3 = useIslandState();
-
-      expect(state1.isReady).toBe(state2.isReady);
-      expect(state2.isReady).toBe(state3.isReady);
-      expect(state1.isReady).toBe(state3.isReady);
     });
   });
 });
