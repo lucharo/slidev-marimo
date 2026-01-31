@@ -49,11 +49,10 @@ def slider_demo(mo):
 def slider_output(mo, slider):
     """Show slider value with calculation"""
     squared = slider.value ** 2
-    mo.md(f"""
+    return mo.md(f"""
 **Value:** {slider.value}
 **Squared:** {squared}
 """)
-    return
 
 
 @app.cell
@@ -84,15 +83,13 @@ def chart_demo(mo, alt, titanic, dropdown):
             y="count()"
         ).properties(width=400, height=200)
 
-    mo.ui.altair_chart(chart)
-    return
+    return mo.ui.altair_chart(chart)
 
 
 @app.cell
 def data_explorer_demo(mo, titanic):
     """Data explorer for Titanic dataset"""
-    mo.ui.dataframe(titanic)
-    return
+    return mo.ui.dataframe(titanic)
 
 
 @app.cell
@@ -107,8 +104,7 @@ def checkbox_demo(mo):
 @app.cell
 def checkbox_output(mo, check, switch):
     """Show checkbox/switch state"""
-    mo.md(f"Checkbox: **{check.value}** | Switch: **{switch.value}**")
-    return
+    return mo.md(f"Checkbox: **{check.value}** | Switch: **{switch.value}**")
 
 
 @app.cell
@@ -122,8 +118,7 @@ def text_input_demo(mo):
 @app.cell
 def text_output(mo, text):
     """Greet the user"""
-    mo.md(f"Hello, **{text.value}**!" if text.value else "_Enter your name above_")
-    return
+    return mo.md(f"Hello, **{text.value}**!" if text.value else "_Enter your name above_")
 
 
 if __name__ == "__main__":
