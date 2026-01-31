@@ -1,171 +1,154 @@
-// Setup for marimo islands integration
-// This file is automatically loaded by Slidev
+/**
+ * Slidev Setup for Marimo Islands
+ *
+ * This file is automatically loaded by Slidev and handles:
+ * 1. Vue app configuration for marimo custom elements
+ * 2. Providing kernel and registry singletons to the app
+ * 3. Initializing marimo after all cells are registered
+ *
+ * Architecture:
+ * - Kernel and registry are provided as Vue injectables
+ * - Components mount and register cells in the registry
+ * - After a stability period, we create island elements and load marimo
+ * - The marimo script parses existing islands on load
+ */
 
-import { MARIMO_VERSION } from "./constants";
+import { installMarimoKernel } from "../composables/useMarimoKernel";
+import { installCellRegistry, type CellRegistry } from "../composables/useCellRegistry";
 import {
-  createIslandFromMarker,
-  getIslandCount,
-  initializeMarimo,
+  initializeMarimoIslands,
+  loadMarimoResources,
+  createSingleIsland,
   isMarimoInitialized,
-} from "./island-registry";
+} from "./island-manager";
+import type { MarimoKernel } from "../composables/useMarimoKernel";
 
 export default ({ app }) => {
   // Register marimo custom elements so Vue doesn't try to compile them
   const originalIsCustomElement = app.config.compilerOptions.isCustomElement;
 
-  app.config.compilerOptions.isCustomElement = (tag) => {
+  app.config.compilerOptions.isCustomElement = (tag: string) => {
     if (tag.startsWith("marimo-")) {
       return true;
     }
     return originalIsCustomElement ? originalIsCustomElement(tag) : false;
   };
 
-  // Load marimo islands resources on client side only
+  // Install kernel and registry singletons into Vue app
+  const kernel = installMarimoKernel(app);
+  const registry = installCellRegistry(app);
+
+  // Only run initialization on client side
   if (typeof window !== "undefined") {
-    // Check if already loaded
-    if (!document.getElementById("marimo-islands-css")) {
-      // Google Fonts (required by marimo)
-      const preconnect1 = document.createElement("link");
-      preconnect1.rel = "preconnect";
-      preconnect1.href = "https://fonts.googleapis.com";
-      document.head.appendChild(preconnect1);
+    // Load CSS resources immediately (doesn't need to wait for cells)
+    loadMarimoResources();
 
-      const preconnect2 = document.createElement("link");
-      preconnect2.rel = "preconnect";
-      preconnect2.href = "https://fonts.gstatic.com";
-      preconnect2.crossOrigin = "anonymous";
-      document.head.appendChild(preconnect2);
+    // Wait for cells to register, then initialize marimo
+    setupCellStabilityCheck(kernel, registry);
 
-      const fonts = document.createElement("link");
-      fonts.rel = "stylesheet";
-      fonts.href =
-        "https://fonts.googleapis.com/css2?family=Fira+Mono:wght@400;500;700&family=Lora&family=PT+Sans:wght@400;700&display=swap";
-      document.head.appendChild(fonts);
-
-      // KaTeX CSS (required for math rendering)
-      const katex = document.createElement("link");
-      katex.rel = "stylesheet";
-      katex.href =
-        "https://cdn.jsdelivr.net/npm/katex@0.16.10/dist/katex.min.css";
-      katex.integrity =
-        "sha384-wcIxkf4k558AjM3Yz3BBFQUbk/zgIYC2R0QpeeYb+TwlBVMrlgLqwRjRtGZiK7ww";
-      katex.crossOrigin = "anonymous";
-      document.head.appendChild(katex);
-
-      // Load marimo islands CSS
-      const link = document.createElement("link");
-      link.id = "marimo-islands-css";
-      link.rel = "stylesheet";
-      link.href = `https://cdn.jsdelivr.net/npm/@marimo-team/islands@${MARIMO_VERSION}/dist/style.css`;
-      link.crossOrigin = "anonymous";
-      link.onerror = () => {
-        console.error("Failed to load marimo islands stylesheet.");
-      };
-      document.head.appendChild(link);
-
-      // Add required marimo-filename tag to HEAD
-      const marimoFilename = document.createElement("marimo-filename");
-      marimoFilename.hidden = true;
-      document.head.appendChild(marimoFilename);
-
-      // Add marimo-mode tag to set the app mode to "read"
-      // This helps initialize initialModeAtom correctly for islands
-      const marimoMode = document.createElement("marimo-mode");
-      marimoMode.setAttribute("data-mode", "read");
-      marimoMode.hidden = true;
-      document.head.appendChild(marimoMode);
-
-      // Initialize marimo after Vue components finish mounting
-      // Use stability-based polling: wait for island count to be stable for 3 seconds
-      // This gives Slidev enough time to preload adjacent slides
-      let lastCount = 0;
-      let stableChecks = 0;
-      let totalChecks = 0;
-      const maxChecks = 50; // 5 seconds max (50 * 100ms)
-      const requiredStableChecks = 30; // Must be stable for 30 checks (3000ms = 3 seconds)
-
-      const checkForIslands = () => {
-        totalChecks++;
-        const currentCount = getIslandCount();
-
-        if (currentCount === lastCount) {
-          // Count is stable - increment stability counter
-          stableChecks++;
-
-          if (stableChecks >= requiredStableChecks && currentCount > 0) {
-            // Count is stable AND we have islands - initialize!
-            console.log(
-              `⏰ Found ${currentCount} islands (stable for 3s), initializing marimo...`,
-            );
-            initializeMarimo();
-            return; // Done
-          }
-          // If stable but count=0, keep checking (components may not have mounted yet)
-        } else {
-          // Count changed - reset stability counter
-          stableChecks = 0;
-          lastCount = currentCount;
-        }
-
-        // Keep checking if we haven't timed out
-        if (totalChecks < maxChecks) {
-          setTimeout(checkForIslands, 100);
-        } else {
-          // Timeout reached - initialize with whatever we have
-          const finalCount = getIslandCount();
-          if (finalCount > 0) {
-            console.log(`⏰ Timeout: Initializing with ${finalCount} islands`);
-            initializeMarimo();
-          } else {
-            console.log("⏰ Timeout: No islands found after 5 seconds");
-          }
-        }
-      };
-
-      // Start checking after a small initial delay to let Vue start mounting
-      setTimeout(checkForIslands, 500);
-
-      // Watch for late-arriving markers (e.g., navigating to a new slide)
-      // After initial initialization, any new marker gets its island created immediately
-      const markerObserver = new MutationObserver((mutations) => {
-        if (!isMarimoInitialized()) return;
-
-        for (const mutation of mutations) {
-          for (const node of mutation.addedNodes) {
-            if (!(node instanceof HTMLElement)) continue;
-
-            // Check if the added node itself is a marker
-            const markers: HTMLElement[] = [];
-            if (node.classList.contains("marimo-island-marker")) {
-              markers.push(node);
-            }
-            // Check descendants (e.g., if a parent container was added)
-            node
-              .querySelectorAll<HTMLElement>(".marimo-island-marker")
-              .forEach((m) => markers.push(m));
-
-            for (const marker of markers) {
-              const existingCount =
-                document.querySelectorAll("marimo-island").length;
-              if (createIslandFromMarker(marker, existingCount)) {
-                console.log(
-                  `🔄 Late marker detected: created island for ${marker.dataset.islandId}`,
-                );
-              }
-            }
-          }
-        }
-      });
-
-      markerObserver.observe(document.body, {
-        childList: true,
-        subtree: true,
-      });
-
-      // Disconnect observer when page unloads to prevent memory leaks
-      window.addEventListener("beforeunload", () => {
-        markerObserver.disconnect();
-      });
-    }
+    // Watch for late-arriving cells (e.g., navigating to a new slide)
+    setupLateArrivalWatcher(kernel, registry);
   }
 };
+
+/**
+ * Wait for cell count to stabilize before initializing marimo.
+ *
+ * Slidev preloads adjacent slides, so components mount in batches.
+ * We wait for the cell count to be stable for 2 seconds before
+ * creating islands and loading the marimo script.
+ */
+function setupCellStabilityCheck(
+  kernel: MarimoKernel,
+  registry: CellRegistry
+): void {
+  let lastCount = 0;
+  let stableChecks = 0;
+  let totalChecks = 0;
+  const maxChecks = 50; // 5 seconds max (50 * 100ms)
+  const requiredStableChecks = 20; // Must be stable for 20 checks (2000ms = 2 seconds)
+
+  const checkForStability = () => {
+    totalChecks++;
+    const currentCount = registry.getCellCount();
+
+    if (currentCount === lastCount) {
+      // Count is stable - increment stability counter
+      stableChecks++;
+
+      if (stableChecks >= requiredStableChecks && currentCount > 0) {
+        // Stable for required period with cells - initialize!
+        console.log(
+          `⏰ Found ${currentCount} cells (stable for 2s), initializing marimo...`
+        );
+        initializeMarimoIslands(kernel, registry);
+        return; // Done
+      }
+      // If stable but count=0, keep checking (components may not have mounted yet)
+    } else {
+      // Count changed - reset stability counter
+      stableChecks = 0;
+      lastCount = currentCount;
+    }
+
+    // Keep checking if we haven't timed out
+    if (totalChecks < maxChecks) {
+      setTimeout(checkForStability, 100);
+    } else {
+      // Timeout reached - initialize with whatever we have
+      const finalCount = registry.getCellCount();
+      if (finalCount > 0) {
+        console.log(`⏰ Timeout: Initializing with ${finalCount} cells`);
+        initializeMarimoIslands(kernel, registry);
+      } else {
+        console.log("⏰ Timeout: No cells found after 5 seconds");
+      }
+    }
+  };
+
+  // Start checking after a small initial delay to let Vue start mounting
+  setTimeout(checkForStability, 500);
+}
+
+/**
+ * Watch for components that mount after initial initialization.
+ *
+ * When navigating to a new slide, components mount but marimo is
+ * already initialized. We need to create island elements for these
+ * late-arriving cells.
+ */
+function setupLateArrivalWatcher(
+  kernel: MarimoKernel,
+  registry: CellRegistry
+): void {
+  // Track cells we've seen to detect new ones
+  let knownCellCount = 0;
+
+  const checkForNewCells = () => {
+    // Only process after marimo is initialized
+    if (!isMarimoInitialized()) {
+      return;
+    }
+
+    const currentCount = registry.getCellCount();
+    if (currentCount > knownCellCount) {
+      // New cells registered - create islands for them
+      const cells = registry.getAllCells();
+      for (const cell of cells) {
+        // Skip cells that already have elements
+        if (cell.element) continue;
+
+        // Skip cells that aren't in pending state
+        if (cell.state !== "pending") continue;
+
+        // Create island for this late-arriving cell
+        createSingleIsland(registry, cell.id);
+      }
+
+      knownCellCount = currentCount;
+    }
+  };
+
+  // Poll for new cells periodically
+  setInterval(checkForNewCells, 500);
+}

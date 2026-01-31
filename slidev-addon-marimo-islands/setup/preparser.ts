@@ -60,8 +60,10 @@ export default definePreparserSetup(() => {
                 if (value === "true" || value === "false") {
                   componentTag += ` :${key}="${value}"`;
                 } else if (key === "hideLines") {
-                  // Parse hideLines as JSON array
-                  componentTag += ` :hide-lines="${value}"`;
+                  // Normalize hideLines to always be an array
+                  // Accepts: hideLines=1, hideLines=[1,2], hideLines=[1, 2, 3]
+                  const normalized = value.startsWith("[") ? value : `[${value}]`;
+                  componentTag += ` :hide-lines="${normalized}"`;
                 } else if (key === "codePosition") {
                   // codePosition: "top" | "bottom"
                   componentTag += ` code-position="${value}"`;

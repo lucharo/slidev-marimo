@@ -1,6 +1,8 @@
 <script setup lang="ts">
-import { computed, getCurrentInstance, onMounted, onUnmounted, ref } from "vue";
-import { useIslandState } from "../composables/useIslandState";
+import { computed, onMounted, onUnmounted, ref } from "vue";
+import { useMarimoKernel } from "../composables/useMarimoKernel";
+import { useCellRegistry } from "../composables/useCellRegistry";
+import { createSingleIsland, isMarimoInitialized } from "../setup/island-manager";
 import "../utils/debugMarimo"; // Side effect: adds window.debugMarimo()
 
 /**
@@ -8,6 +10,11 @@ import "../utils/debugMarimo"; // Side effect: adds window.debugMarimo()
  *
  * Embeds interactive marimo code cells directly into Slidev presentations using Pyodide/WASM.
  * Each island is self-contained and can execute Python code without requiring a server.
+ *
+ * Architecture:
+ * - Uses proper 4-char cell IDs matching marimo's expected format
+ * - Coordinates with kernel and registry singletons for state management
+ * - Islands are created BEFORE marimo script loads for correct initialization
  *
  * @example
  * ```vue
@@ -41,7 +48,7 @@ const props = withDefaults(
   defineProps<{
     code: string;
     displayCode?: boolean;
-    hideLines?: number[];
+    hideLines?: number | number[];
     codePosition?: "top" | "bottom";
   }>(),
   {
@@ -51,41 +58,49 @@ const props = withDefaults(
   },
 );
 
+// Normalize hideLines to always be an array (handles number | number[])
+const normalizedHideLines = computed<number[]>(() => {
+  if (typeof props.hideLines === "number") {
+    return [props.hideLines];
+  }
+  return props.hideLines || [];
+});
+
 // Process code to hide specified lines
 const processedCode = computed(() => {
-  if (!props.hideLines || props.hideLines.length === 0) {
+  if (normalizedHideLines.value.length === 0) {
     return props.code;
   }
 
   const lines = props.code.split("\n");
   return lines
-    .filter((_, index) => !props.hideLines.includes(index + 1))
+    .filter((_, index) => !normalizedHideLines.value.includes(index + 1))
     .join("\n");
 });
 
-// Generate unique ID from Vue's component UID (HMR-safe!)
-const instance = getCurrentInstance();
-const myIslandId = `island-${instance?.uid || Math.random().toString(36).slice(2)}`;
+// Get kernel and registry from Vue context
+const kernel = useMarimoKernel();
+const registry = useCellRegistry();
 
-// Refs
-const { waitUntilReady } = useIslandState();
+// Component state
+const cellId = ref<string | null>(null);
 const islandContainer = ref<HTMLElement | null>(null);
 const error = ref<string | null>(null);
 const isLoading = ref(true);
-let marker: HTMLElement | null = null;
+
+// Observers and handlers for cleanup
 let observer: IntersectionObserver | null = null;
 let resizeObserver: ResizeObserver | null = null;
 let contentObserver: MutationObserver | null = null;
 let resizeHandler: (() => void) | null = null;
 
 // Retry configuration for finding island elements
-const FIND_ISLAND_MAX_ATTEMPTS = 10;
-const FIND_ISLAND_INTERVAL_MS = 500;
+const FIND_ISLAND_MAX_ATTEMPTS = 20;
+const FIND_ISLAND_INTERVAL_MS = 250;
 
 /**
- * Find the island element with retries. Late-mounting components
- * (e.g., navigating to a new slide) may not have their island
- * created immediately.
+ * Find the island element with retries.
+ * Handles cases where kernel is still initializing.
  */
 async function findIsland(
   id: string,
@@ -94,12 +109,13 @@ async function findIsland(
 ): Promise<HTMLElement | null> {
   for (let attempt = 0; attempt < maxAttempts; attempt++) {
     const island = document.querySelector<HTMLElement>(
-      `marimo-island[data-marker-id="${id}"]`,
+      `marimo-island[data-cell-id="${id}"]`,
     );
     if (island) return island;
-    // Log progress every 3rd attempt (attempts 3, 6, 9 in 1-indexed display)
-    if ((attempt + 1) % 3 === 0) {
-      console.debug(`🔍 Island ${id}: attempt ${attempt + 1}/${maxAttempts}...`);
+
+    // Log progress periodically
+    if ((attempt + 1) % 5 === 0) {
+      console.debug(`🔍 Cell ${id}: finding island, attempt ${attempt + 1}/${maxAttempts}...`);
     }
     await new Promise((r) => setTimeout(r, intervalMs));
   }
@@ -117,48 +133,39 @@ function updateIslandPosition(island: HTMLElement, container: HTMLElement) {
   island.style.width = `${rect.width || 800}px`;
 }
 
-// After component mounts, create marker and wait for marimo
+// Mount: register cell and set up island
 onMounted(async () => {
   try {
-    // Create marker element immediately - this registers the island
-    marker = document.createElement("div");
-    marker.classList.add("marimo-island-marker");
-    marker.setAttribute("data-island-id", myIslandId);
-    marker.setAttribute(
-      "data-island-code",
-      encodeURIComponent(processedCode.value),
-    );
-    marker.setAttribute("data-island-display-code", String(props.displayCode));
-    marker.setAttribute("data-island-reactive", "true");
-    marker.style.display = "none";
-    document.body.appendChild(marker);
+    // Step 1: Register this cell in the registry
+    cellId.value = registry.registerCell(processedCode.value, true);
+    console.log(`📝 Cell ${cellId.value}: mounted, waiting for kernel...`);
 
-    console.log(`📝 Island ${myIslandId} marker created`);
+    // Step 2: Wait for kernel to be ready
+    await kernel.waitForReady();
+    console.log(`✓ Cell ${cellId.value}: kernel ready`);
 
-    // Wait for marimo custom element to be registered
-    await waitUntilReady();
+    // Step 3: Find or create the island element
+    // If marimo was already initialized, we need to create the island ourselves
+    let island: HTMLElement | null = null;
 
-    console.log(
-      `✓ Island ${myIslandId}: Marimo ready, finding island element...`,
-    );
-
-    // Find our island with retries (handles late-mounting after navigation)
-    const island = await findIsland(myIslandId);
+    if (isMarimoInitialized()) {
+      // Late-mounting component - create island directly
+      island = createSingleIsland(registry, cellId.value);
+    } else {
+      // Island should have been created during initial batch
+      island = await findIsland(cellId.value);
+    }
 
     if (!island) {
-      error.value =
-        "Island element not found after retries. Try refreshing the page.";
+      error.value = "Island element not found. Try refreshing the page.";
       isLoading.value = false;
-      console.warn(`⏸️  Island ${myIslandId}: Not found after 10 retries.`);
+      console.warn(`⏸️ Cell ${cellId.value}: island not found after retries`);
       return;
     }
 
-    console.log(
-      `✓ Island ${myIslandId}: Found element, waiting for visibility...`,
-    );
+    console.log(`✓ Cell ${cellId.value}: found island element`);
 
-    // Watch for actual rendered content inside the island output
-    // This ensures we don't dismiss the spinner before Python output exists
+    // Step 4: Watch for actual rendered content
     const outputEl = island.querySelector("marimo-cell-output");
     if (outputEl) {
       contentObserver = new MutationObserver(() => {
@@ -166,11 +173,12 @@ onMounted(async () => {
           isLoading.value = false;
           contentObserver?.disconnect();
           contentObserver = null;
-          console.log(`✓ Island ${myIslandId}: Output rendered`);
+          console.log(`✓ Cell ${cellId.value}: output rendered`);
         }
       });
       contentObserver.observe(outputEl, { childList: true, subtree: true });
-      // Check if content already exists (island may have rendered quickly)
+
+      // Check if content already exists
       if (outputEl.children.length > 0) {
         isLoading.value = false;
         contentObserver.disconnect();
@@ -178,17 +186,16 @@ onMounted(async () => {
       }
     }
 
-    // Set up positioning via IntersectionObserver
+    // Step 5: Set up positioning via IntersectionObserver
     if (islandContainer.value) {
       const container = islandContainer.value;
 
-      // Reusable position updater
       const syncPosition = () => {
-        if (!container || !island.isConnected) return;
+        if (!container || !island?.isConnected) return;
         updateIslandPosition(island, container);
       };
 
-      // Listen for window resize to reposition
+      // Listen for window resize
       resizeHandler = syncPosition;
       window.addEventListener("resize", resizeHandler);
 
@@ -198,31 +205,31 @@ onMounted(async () => {
         entries.forEach((entry) => {
           if (entry.isIntersecting) {
             syncPosition();
-            island.style.display = "block";
-            island.style.zIndex = "10";
+            island!.style.display = "block";
+            island!.style.zIndex = "10";
 
             // Sync container height with island height
             if (!resizeObserver) {
               resizeObserver = new ResizeObserver(() => {
-                if (!island.isConnected) return;
+                if (!island?.isConnected) return;
                 const islandHeight = island.offsetHeight;
                 if (islandContainer.value && islandHeight > 0) {
                   islandContainer.value.style.height = `${islandHeight}px`;
                 }
               });
-              resizeObserver.observe(island);
+              resizeObserver.observe(island!);
             }
 
-            const initialHeight = island.offsetHeight;
+            const initialHeight = island!.offsetHeight;
             if (initialHeight > 0) {
               container.style.height = `${initialHeight}px`;
             } else {
               container.style.minHeight = "100px";
             }
 
-            console.log(`✓ Island ${myIslandId}: Visible and positioned`);
+            console.log(`✓ Cell ${cellId.value}: visible and positioned`);
           } else {
-            island.style.display = "none";
+            island!.style.display = "none";
           }
         });
       });
@@ -232,7 +239,7 @@ onMounted(async () => {
   } catch (err) {
     error.value = err instanceof Error ? err.message : "Unknown error";
     isLoading.value = false;
-    console.error(`❌ Island ${myIslandId} failed:`, err);
+    console.error(`❌ Cell ${cellId.value} failed:`, err);
   }
 });
 
@@ -254,9 +261,11 @@ onUnmounted(() => {
     window.removeEventListener("resize", resizeHandler);
     resizeHandler = null;
   }
-  if (marker) {
-    marker.remove();
-    marker = null;
+
+  // Unregister cell from registry
+  if (cellId.value) {
+    registry.unregisterCell(cellId.value);
+    console.log(`🗑️ Cell ${cellId.value}: unmounted`);
   }
 });
 </script>
@@ -277,7 +286,7 @@ onUnmounted(() => {
       </div>
     </div>
 
-    <!-- Loading state - independent so it shows alongside code display -->
+    <!-- Loading state -->
     <div v-if="isLoading && !error" class="loading-box">
       <div class="spinner"></div>
       <div class="loading-message">Initializing Python runtime...</div>
