@@ -12,9 +12,9 @@ import "../utils/debugMarimo"; // Side effect: adds window.debugMarimo()
  * Each island is self-contained and can execute Python code without requiring a server.
  *
  * Architecture:
- * - Uses proper 4-char cell IDs matching marimo's expected format
- * - Coordinates with kernel and registry singletons for state management
- * - Islands are created BEFORE marimo script loads for correct initialization
+ * - Uses deterministic cell IDs matching marimo's seeded random (seed 42)
+ * - Islands are moved INTO the Vue component tree for proper positioning
+ * - No absolute positioning - islands flow with the document
  *
  * @example
  * ```vue
@@ -30,16 +30,6 @@ import "../utils/debugMarimo"; // Side effect: adds window.debugMarimo()
  * df"
  *   />
  * </template>
- * ```
- *
- * @example Markdown Syntax
- * ```markdown
- * ```marimo
- * import marimo as mo
- * import polars as pl
- *
- * df = pl.DataFrame(...)
- * df
  * ```
  */
 
@@ -84,7 +74,7 @@ const registry = useCellRegistry();
 
 // Component state
 const cellId = ref<string | null>(null);
-const islandContainer = ref<HTMLElement | null>(null);
+const outputContainer = ref<HTMLElement | null>(null);
 const codeElement = ref<HTMLElement | null>(null);
 const error = ref<string | null>(null);
 const isLoading = ref(true);
@@ -109,11 +99,8 @@ if (typeof window !== "undefined") {
   window.addEventListener("prism-ready", highlightCode, { once: true });
 }
 
-// Observers, handlers, and timeouts for cleanup
-let observer: IntersectionObserver | null = null;
-let resizeObserver: ResizeObserver | null = null;
+// Observers and timeouts for cleanup
 let contentObserver: MutationObserver | null = null;
-let resizeHandler: (() => void) | null = null;
 let spinnerTimeout: ReturnType<typeof setTimeout> | null = null;
 let noOutputTimeout: ReturnType<typeof setTimeout> | null = null;
 
@@ -146,14 +133,22 @@ async function findIsland(
 }
 
 /**
- * Position the island element over our container placeholder.
+ * Move the island element into our output container.
+ * This keeps the island in Vue's DOM flow for proper positioning.
  */
-function updateIslandPosition(island: HTMLElement, container: HTMLElement) {
-  const rect = container.getBoundingClientRect();
-  island.style.position = "absolute";
-  island.style.left = `${rect.left + window.scrollX}px`;
-  island.style.top = `${rect.top + window.scrollY}px`;
-  island.style.width = `${rect.width || 800}px`;
+function moveIslandToContainer(island: HTMLElement, container: HTMLElement) {
+  // Remove absolute positioning that marimo might have set
+  island.style.position = 'relative';
+  island.style.left = '';
+  island.style.top = '';
+  island.style.width = '100%';
+  island.style.display = 'block';
+  island.style.zIndex = '';
+
+  // Move the island into our container
+  container.appendChild(island);
+
+  console.log(`📍 Island moved into container for inline positioning`);
 }
 
 // Mount: register cell and set up island
@@ -253,55 +248,10 @@ onMounted(async () => {
       }, 5000);
     }
 
-    // Step 5: Set up positioning via IntersectionObserver
-    if (islandContainer.value) {
-      const container = islandContainer.value;
-
-      const syncPosition = () => {
-        if (!container || !islandEl.isConnected) return;
-        updateIslandPosition(islandEl, container);
-      };
-
-      // Listen for window resize
-      resizeHandler = syncPosition;
-      window.addEventListener("resize", resizeHandler);
-
-      observer = new IntersectionObserver((entries) => {
-        if (!islandContainer.value) return;
-
-        entries.forEach((entry) => {
-          if (entry.isIntersecting) {
-            syncPosition();
-            islandEl.style.display = "block";
-            islandEl.style.zIndex = "10";
-
-            // Sync container height with island height
-            if (!resizeObserver) {
-              resizeObserver = new ResizeObserver(() => {
-                if (!islandEl.isConnected) return;
-                const islandHeight = islandEl.offsetHeight;
-                if (islandContainer.value && islandHeight > 0) {
-                  islandContainer.value.style.height = `${islandHeight}px`;
-                }
-              });
-              resizeObserver.observe(islandEl);
-            }
-
-            const initialHeight = islandEl.offsetHeight;
-            if (initialHeight > 0) {
-              container.style.height = `${initialHeight}px`;
-            } else {
-              container.style.minHeight = "100px";
-            }
-
-            console.log(`✓ Cell ${cellId.value}: visible and positioned`);
-          } else {
-            islandEl.style.display = "none";
-          }
-        });
-      });
-
-      observer.observe(container);
+    // Step 5: Move island into our container for inline positioning
+    if (outputContainer.value) {
+      moveIslandToContainer(islandEl, outputContainer.value);
+      console.log(`✓ Cell ${cellId.value}: positioned inline`);
     }
   } catch (err) {
     error.value = err instanceof Error ? err.message : "Unknown error";
@@ -315,18 +265,6 @@ onUnmounted(() => {
   if (contentObserver) {
     contentObserver.disconnect();
     contentObserver = null;
-  }
-  if (resizeObserver) {
-    resizeObserver.disconnect();
-    resizeObserver = null;
-  }
-  if (observer) {
-    observer.disconnect();
-    observer = null;
-  }
-  if (resizeHandler) {
-    window.removeEventListener("resize", resizeHandler);
-    resizeHandler = null;
   }
   if (spinnerTimeout) {
     clearTimeout(spinnerTimeout);
@@ -343,6 +281,14 @@ onUnmounted(() => {
     console.log(`🗑️ Cell ${cellId.value}: unmounted`);
   }
 });
+
+// HMR: Force full page reload when this component changes
+// Marimo island state cannot be hot-reloaded
+if (import.meta.hot) {
+  import.meta.hot.accept(() => {
+    import.meta.hot?.invalidate();
+  });
+}
 </script>
 
 <template>
@@ -367,8 +313,8 @@ onUnmounted(() => {
       <div class="loading-message">Initializing Python runtime...</div>
     </div>
 
-    <!-- Island container - marimo output will be positioned here -->
-    <div ref="islandContainer" class="island-content"></div>
+    <!-- Output container - marimo island will be moved HERE for inline flow -->
+    <div ref="outputContainer" class="output-container"></div>
 
     <!-- Code display (bottom position) -->
     <div v-if="displayCode && !error && codePosition === 'bottom'" class="code-block">
@@ -415,10 +361,6 @@ onUnmounted(() => {
 }
 
 .loading-box {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
   display: flex;
   align-items: center;
   gap: 1rem;
@@ -426,7 +368,6 @@ onUnmounted(() => {
   background: rgba(243, 244, 246, 0.95);
   border-radius: 8px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  z-index: 10;
 }
 
 .spinner {
@@ -447,8 +388,31 @@ onUnmounted(() => {
   font-size: 0.875rem;
 }
 
-.island-content {
-  /* Island will be rendered here */
+.output-container {
+  /* Container for marimo island - flows with document */
+  min-height: 50px;
+}
+
+/* Style marimo islands when they're inside our container */
+.output-container :deep(marimo-island) {
+  display: block;
+  width: 100%;
+}
+
+/* Hide marimo's built-in copy/run buttons for cleaner presentation */
+.output-container :deep(.marimo-copy-button),
+.output-container :deep(.marimo-run-button),
+.output-container :deep([data-testid="copy-button"]),
+.output-container :deep([data-testid="run-button"]) {
+  display: none !important;
+}
+
+/* Clean up marimo output styling */
+.output-container :deep(marimo-cell-output) {
+  padding: 1rem;
+  background: var(--slidev-code-background, #f8f9fa);
+  border-radius: 6px;
+  overflow-x: auto;
 }
 
 .code-block {
