@@ -1,0 +1,103 @@
+/**
+ * Marimo Islands Override Styles
+ *
+ * Customizes marimo's default styling for Slidev presentations.
+ * Hides unnecessary UI elements and provides clean presentation aesthetics.
+ */
+
+/* Hide marimo's built-in UI controls globally */
+marimo-island .marimo-copy-button,
+marimo-island .marimo-run-button,
+marimo-island [data-testid="copy-button"],
+marimo-island [data-testid="run-button"],
+marimo-island .cell-actions,
+marimo-island .cell-toolbar {
+  display: none !important;
+}
+
+/* Override marimo's output styling for presentations */
+marimo-cell-output {
+  font-size: inherit !important;
+  font-family: inherit !important;
+}
+
+/* Ensure widgets and interactive elements display properly */
+marimo-island .widget-container,
+marimo-island .marimo-slider,
+marimo-island .marimo-dropdown,
+marimo-island .marimo-button {
+  width: 100%;
+  max-width: 100%;
+}
+
+/* Clean up table styling */
+marimo-island table {
+  border-collapse: collapse;
+  width: 100%;
+  margin: 0.5rem 0;
+}
+
+marimo-island th,
+marimo-island td {
+  padding: 0.5rem 1rem;
+  text-align: left;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+marimo-island th {
+  background: rgba(0, 0, 0, 0.05);
+  font-weight: 600;
+}
+
+/* Chart/plot containers */
+marimo-island .plotly-container,
+marimo-island .matplotlib-container,
+marimo-island .altair-container {
+  width: 100%;
+  max-width: 100%;
+  overflow: hidden;
+}
+
+/* Ensure proper scrolling for overflow content */
+marimo-island pre {
+  overflow-x: auto;
+  max-width: 100%;
+}
+
+/* Remove any unexpected margins from marimo internals */
+marimo-island > * {
+  margin-top: 0;
+  margin-bottom: 0;
+}
+
+/* Dark mode support */
+@media (prefers-color-scheme: dark) {
+  marimo-cell-output {
+    background: var(--slidev-code-background, #1e1e1e);
+    color: var(--slidev-code-foreground, #d4d4d4);
+  }
+
+  marimo-island th {
+    background: rgba(255, 255, 255, 0.1);
+  }
+
+  marimo-island th,
+  marimo-island td {
+    border-color: rgba(255, 255, 255, 0.1);
+  }
+}
+
+/* Slidev dark class support */
+.dark marimo-cell-output {
+  background: var(--slidev-code-background, #1e1e1e);
+  color: var(--slidev-code-foreground, #d4d4d4);
+}
+
+.dark marimo-island th {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.dark marimo-island th,
+.dark marimo-island td {
+  border-color: rgba(255, 255, 255, 0.1);
+}

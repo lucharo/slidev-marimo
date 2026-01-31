@@ -22,6 +22,8 @@ import {
   isMarimoInitialized,
 } from "./island-manager";
 import type { MarimoKernel } from "../composables/useMarimoKernel";
+// Global marimo styling overrides
+import "../styles/marimo-overrides.css";
 
 export default ({ app }) => {
   // Register marimo custom elements so Vue doesn't try to compile them
