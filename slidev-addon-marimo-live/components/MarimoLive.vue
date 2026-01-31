@@ -182,9 +182,20 @@ async function runCell() {
 // Track timeout for cleanup
 let autoRunTimeout: ReturnType<typeof setTimeout> | null = null;
 
+// Check if cell already has output from instantiation
+const hasExistingOutput = computed(() => {
+  return cellState.value?.output !== null && cellState.value?.output !== undefined;
+});
+
 // Auto-run on mount if enabled and connected
 onMounted(() => {
   if (props.autoRun) {
+    // If cell already has output from auto_instantiate, don't re-run
+    if (hasExistingOutput.value) {
+      hasRun.value = true;
+      return;
+    }
+
     // Check if already ready - run immediately
     if (kernel.isKernelReady.value && kernel.isConnected.value && !hasRun.value) {
       runCell();
@@ -205,6 +216,12 @@ onMounted(() => {
       () => kernel.isKernelReady.value,
       (ready) => {
         if (ready && !hasRun.value) {
+          // Check again for existing output (may have arrived while waiting)
+          if (hasExistingOutput.value) {
+            hasRun.value = true;
+            cleanup();
+            return;
+          }
           runCell();
           cleanup();
         }
@@ -215,6 +232,12 @@ onMounted(() => {
       () => kernel.isConnected.value,
       (connected) => {
         if (connected && kernel.isKernelReady.value && !hasRun.value) {
+          // Check again for existing output
+          if (hasExistingOutput.value) {
+            hasRun.value = true;
+            cleanup();
+            return;
+          }
           runCell();
           cleanup();
         }
