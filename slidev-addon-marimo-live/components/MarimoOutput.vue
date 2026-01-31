@@ -7,6 +7,7 @@
  */
 
 import { computed } from "vue";
+import DOMPurify from "dompurify";
 import type { CellOutput } from "../setup/message-parser";
 import { extractHtml } from "../setup/message-parser";
 
@@ -18,7 +19,9 @@ const props = defineProps<{
 
 const htmlContent = computed(() => {
   if (!props.output) return null;
-  return extractHtml(props.output);
+  const html = extractHtml(props.output);
+  // Sanitize HTML to prevent XSS
+  return html ? DOMPurify.sanitize(html) : null;
 });
 
 // Console array is normalized by kernel-connection.ts; this handles data field rendering
@@ -33,10 +36,21 @@ const consoleOutput = computed(() => {
     .join("\n");
 });
 
-// Check if console output contains HTML that should be rendered
+// Check if console output contains actual HTML tags from marimo's formatter
+// More specific pattern to avoid false positives with comparison operators
 const consoleHasHtml = computed(() => {
   if (!consoleOutput.value) return false;
-  return /<[a-z][\s\S]*>/i.test(consoleOutput.value);
+  // Match marimo's traceback HTML patterns: <span class="..."> or paired tags
+  return (
+    /<(span|div|pre|code)[^>]*class=/i.test(consoleOutput.value) ||
+    /<(span|div|pre|code)[^>]*>[\s\S]*<\/\1>/i.test(consoleOutput.value)
+  );
+});
+
+// Sanitize console HTML output
+const sanitizedConsoleHtml = computed(() => {
+  if (!consoleOutput.value) return "";
+  return DOMPurify.sanitize(consoleOutput.value);
 });
 </script>
 
@@ -55,11 +69,11 @@ const consoleHasHtml = computed(() => {
       v-html="htmlContent"
     />
 
-    <!-- Console output (render as HTML if it contains HTML tags) -->
+    <!-- Console output (render as sanitized HTML if it contains HTML tags) -->
     <div
       v-if="consoleOutput && consoleHasHtml"
       class="output-console output-console-html"
-      v-html="consoleOutput"
+      v-html="sanitizedConsoleHtml"
     />
     <pre
       v-else-if="consoleOutput"
