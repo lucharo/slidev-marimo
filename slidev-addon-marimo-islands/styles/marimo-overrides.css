@@ -94,8 +94,9 @@ marimo-island input[type="range"] {
 /* Ensure the marimo-slider custom element has proper dimensions */
 marimo-slider {
   display: block !important;
-  width: 200px !important;
+  width: 100% !important;
   min-width: 200px !important;
+  max-width: 400px !important;
   min-height: 24px !important;
 }
 
@@ -105,7 +106,7 @@ marimo-ui-element {
   width: 100% !important;
 }
 
-/* Debug: ensure the output container chain has width */
+/* Ensure output container chain has width for marimo components to render */
 marimo-island .output {
   width: 100% !important;
   display: block !important;
