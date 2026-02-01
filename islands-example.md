@@ -6,7 +6,7 @@ addons:
 
 # Marimo Islands Demo
 
-Basic Python code execution in Slidev with HMR support.
+Basic Python code execution in Slidev.
 
 ```marimo
 import marimo as mo
@@ -103,35 +103,25 @@ data
 
 ---
 
-# Markdown Block Options
+# Two Ways to Define Cells
 
-You can pass options directly in marimo code blocks:
+**1. Markdown code fence** (recommended for most cases):
 
-```marimo displayCode=false
-mo.md('Hidden code, visible output')
+````md
+```marimo
+mo.md('Hello from Python!')
 ```
+````
 
----
+With options: `` ```marimo displayCode=false hideLines=1,2 ``
 
-# Component Advanced Options
+**2. Vue component** (for inline/dynamic use):
 
-Using the `<MarimoIsland>` component with props:
-
-- `code` - Python code to execute (required)
-- `displayCode` - Show/hide source code (default: `true`)  
-- `hideLines` - Hide specific lines by index (1-indexed)
-
-Hide specific lines:
-
-```marimo hideLines=1
-# this comment won't show
-setup_result = 42
-mo.md(f'Result: {setup_result}')
-```
-
-Hide all code, show output only:
-
+```html
 <MarimoIsland
-  code="mo.md('📊 Output only - no code visible')"
+  code="mo.md('Hello!')"
   :display-code="false"
 />
+```
+
+**Available options:** `displayCode`, `displayOutput`, `hideLines`
