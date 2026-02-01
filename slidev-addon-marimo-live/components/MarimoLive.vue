@@ -28,9 +28,20 @@
  * ```
  */
 
-import { computed, getCurrentInstance, onMounted, onUnmounted, ref, watch } from "vue";
+import { computed, getCurrentInstance, nextTick, onMounted, onUnmounted, ref, watch } from "vue";
 import { useMarimoKernel } from "../composables/useMarimoKernel";
 import MarimoOutput from "./MarimoOutput.vue";
+
+// Declare Prism type for syntax highlighting
+declare global {
+  interface Window {
+    Prism?: {
+      highlight: (code: string, grammar: unknown, language: string) => string;
+      languages: Record<string, unknown>;
+      highlightElement: (element: Element) => void;
+    };
+  }
+}
 
 const props = withDefaults(
   defineProps<{
@@ -48,12 +59,15 @@ const props = withDefaults(
     cellId?: string;
     /** Auto-run code on mount */
     autoRun?: boolean;
+    /** Show status bar with run button (hidden by default for clean presentation) */
+    showStatusBar?: boolean;
   }>(),
   {
     displayCode: true,
     hideLines: () => [],
     codePosition: "bottom",
     autoRun: true,
+    showStatusBar: false,
   },
 );
 
@@ -130,10 +144,50 @@ const processedCode = computed(() => {
     .join("\n");
 });
 
-// Display code with syntax highlighting placeholder
-const displayLines = computed(() => {
-  return processedCode.value.split("\n");
+// Ref for code element (for Prism highlighting)
+const codeElement = ref<HTMLElement | null>(null);
+
+// Highlighted code (with Prism syntax highlighting)
+const highlightedCode = computed(() => {
+  const code = processedCode.value;
+  if (!code) return "";
+
+  // Try to use Prism if available
+  if (typeof window !== "undefined" && window.Prism?.languages?.python) {
+    try {
+      return window.Prism.highlight(code, window.Prism.languages.python, "python");
+    } catch {
+      // Fall back to plain text
+    }
+  }
+
+  // Fallback: escape HTML and return plain code
+  return code
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;");
 });
+
+// Add line numbers to highlighted code
+const highlightedLines = computed(() => {
+  const html = highlightedCode.value;
+  if (!html) return [];
+  return html.split("\n");
+});
+
+// Highlight code when Prism becomes available
+function highlightCode() {
+  nextTick(() => {
+    if (codeElement.value && window.Prism?.highlightElement) {
+      window.Prism.highlightElement(codeElement.value);
+    }
+  });
+}
+
+// Listen for Prism ready event
+if (typeof window !== "undefined") {
+  window.addEventListener("prism-ready", highlightCode, { once: true });
+}
 
 // Get cell state from kernel
 const cellState = computed(() => kernel.getCellState(myCellId.value));
@@ -281,8 +335,8 @@ function handleKeydown(event: KeyboardEvent) {
     @keydown="handleKeydown"
     tabindex="0"
   >
-    <!-- Status bar -->
-    <div class="status-bar">
+    <!-- Status bar (hidden by default for clean presentation) -->
+    <div v-if="showStatusBar" class="status-bar">
       <div class="status-indicator" :class="status">
         <span v-if="status === 'running'" class="spinner"></span>
         <span v-else-if="status === 'idle' && hasRun" class="check">&#10003;</span>
@@ -316,13 +370,13 @@ function handleKeydown(event: KeyboardEvent) {
       <span>Cell "{{ cell }}" not found in notebook</span>
     </div>
 
-    <!-- Code display (read-only) -->
+    <!-- Code display (read-only, with syntax highlighting) -->
     <div v-else-if="displayCode && cellCode" class="code-container">
-      <pre class="code-block"><code class="language-python"><span
-  v-for="(line, idx) in displayLines"
+      <pre class="code-block"><code ref="codeElement" class="language-python"><span
+  v-for="(lineHtml, idx) in highlightedLines"
   :key="idx"
   class="code-line"
-><span class="line-number">{{ idx + 1 }}</span><span class="line-content">{{ line }}</span>
+><span class="line-number">{{ idx + 1 }}</span><span class="line-content" v-html="lineHtml || '&nbsp;'"></span>
 </span></code></pre>
     </div>
 
@@ -335,8 +389,8 @@ function handleKeydown(event: KeyboardEvent) {
       />
     </div>
 
-    <!-- Connection status warning -->
-    <div v-if="!kernel.isConnected.value" class="connection-warning">
+    <!-- Connection status warning (only show when status bar is visible) -->
+    <div v-if="showStatusBar && !kernel.isConnected.value" class="connection-warning">
       <span class="warning-icon">&#9888;</span>
       <span>Not connected to marimo kernel</span>
       <button @click="kernel.connect()" class="reconnect-button">
@@ -349,11 +403,17 @@ function handleKeydown(event: KeyboardEvent) {
 <style scoped>
 .marimo-live {
   position: relative;
-  border: 1px solid #e5e7eb;
+  border: 1px solid #374151;
   border-radius: 8px;
   overflow: hidden;
-  background: #ffffff;
+  background: #1f2937;
   margin: 1rem 0;
+}
+
+/* Light mode */
+:root:not(.dark) .marimo-live {
+  border-color: #e5e7eb;
+  background: #ffffff;
 }
 
 .marimo-live:focus {
@@ -393,9 +453,16 @@ function handleKeydown(event: KeyboardEvent) {
   align-items: center;
   gap: 0.5rem;
   padding: 0.5rem 0.75rem;
-  background: #f9fafb;
-  border-bottom: 1px solid #e5e7eb;
+  background: #374151;
+  border-bottom: 1px solid #4b5563;
   font-size: 0.75rem;
+  color: #9ca3af;
+}
+
+:root:not(.dark) .status-bar {
+  background: #f9fafb;
+  border-bottom-color: #e5e7eb;
+  color: #6b7280;
 }
 
 .status-indicator {
@@ -501,13 +568,78 @@ function handleKeydown(event: KeyboardEvent) {
 }
 
 .line-content {
-  color: #f9fafb;
+  color: #abb2bf;
+}
+
+/* Prism.js syntax highlighting - One Dark theme colors */
+.line-content :deep(.token.comment),
+.line-content :deep(.token.prolog),
+.line-content :deep(.token.doctype),
+.line-content :deep(.token.cdata) {
+  color: #5c6370;
+  font-style: italic;
+}
+
+.line-content :deep(.token.keyword) {
+  color: #c678dd;
+}
+
+.line-content :deep(.token.builtin) {
+  color: #e5c07b;
+}
+
+.line-content :deep(.token.function) {
+  color: #61afef;
+}
+
+.line-content :deep(.token.string),
+.line-content :deep(.token.triple-quoted-string) {
+  color: #98c379;
+}
+
+.line-content :deep(.token.number) {
+  color: #d19a66;
+}
+
+.line-content :deep(.token.operator) {
+  color: #56b6c2;
+}
+
+.line-content :deep(.token.punctuation) {
+  color: #abb2bf;
+}
+
+.line-content :deep(.token.class-name) {
+  color: #e5c07b;
+}
+
+.line-content :deep(.token.boolean) {
+  color: #d19a66;
+}
+
+.line-content :deep(.token.decorator) {
+  color: #e5c07b;
+}
+
+.line-content :deep(.token.attr-name) {
+  color: #d19a66;
+}
+
+.line-content :deep(.token.attr-value) {
+  color: #98c379;
 }
 
 /* Output container */
 .output-container {
   padding: 0.75rem;
   min-height: 40px;
+  background: #1f2937;
+  color: #f9fafb;
+}
+
+:root:not(.dark) .output-container {
+  background: #ffffff;
+  color: #1f2937;
 }
 
 /* Cell not found warning */

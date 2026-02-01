@@ -4,12 +4,14 @@
  *
  * Renders cell output from the marimo kernel.
  * Supports HTML, images, JSON, and plain text.
+ * Also handles hydration of marimo UI elements like sliders.
  */
 
-import { computed } from "vue";
 import DOMPurify from "dompurify";
+import { computed, nextTick, watch } from "vue";
 import type { CellOutput } from "../setup/message-parser";
 import { extractHtml } from "../setup/message-parser";
+import { injectAllSliderStyles } from "../setup/slider-styles";
 
 const props = defineProps<{
   output: CellOutput | null;
@@ -146,6 +148,20 @@ const consoleHasHtml = computed(() => {
 const sanitizedConsoleHtml = computed(() => {
   if (!consoleOutput.value) return "";
   return DOMPurify.sanitize(consoleOutput.value);
+});
+
+// When HTML content changes, trigger slider styling after render
+// This ensures sliders that are dynamically added get proper styling
+watch(htmlContent, (newContent) => {
+  if (newContent && newContent.includes("marimo-slider")) {
+    // Wait for DOM update then inject slider styles
+    nextTick(() => {
+      // Small delay to let custom elements initialize
+      setTimeout(() => {
+        injectAllSliderStyles();
+      }, 100);
+    });
+  }
 });
 </script>
 

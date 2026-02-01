@@ -4,6 +4,10 @@
  * This file is automatically loaded by Slidev.
  * Initializes the WebSocket connection to the marimo server and provides
  * the kernel connection to all components via Vue's dependency injection.
+ *
+ * Also loads the marimo frontend for interactive UI elements (sliders,
+ * dropdowns, charts) and sets up the message bridge to redirect UI
+ * communications to the WebSocket kernel.
  */
 
 import {
@@ -11,6 +15,9 @@ import {
   KERNEL_CONNECTION_KEY,
 } from "../composables/useMarimoKernel";
 import { createKernelConnection, type KernelConfig } from "./kernel-connection";
+import { loadMarimoFrontend } from "./marimo-frontend";
+import { installMessageBridge } from "./message-bridge";
+import { observeSliders, pollForSliders } from "./slider-styles";
 import { initializeUISync } from "./ui-sync";
 
 // Default configuration - can be overridden via slidev frontmatter or global config
@@ -47,6 +54,24 @@ export default ({ app }) => {
 
   // Set up UI element synchronization
   initializeUISync(kernel);
+
+  // Install message bridge BEFORE loading marimo frontend
+  // This ensures UI component communications are intercepted
+  installMessageBridge(kernel);
+
+  // Load marimo frontend for interactive UI components
+  loadMarimoFrontend()
+    .then(() => {
+      console.log("[marimo-live] Frontend loaded, UI components ready");
+      // Start polling for sliders and inject styles
+      pollForSliders();
+      // Also set up observer for dynamically added sliders
+      observeSliders();
+    })
+    .catch((err) => {
+      console.warn("[marimo-live] Frontend loading failed:", err);
+      console.log("[marimo-live] UI components may not render correctly");
+    });
 
   // Provide kernel to all components
   app.provide(KERNEL_CONNECTION_KEY, kernel);

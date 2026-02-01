@@ -1,0 +1,389 @@
+/**
+ * Marimo UI Overrides
+ *
+ * CSS overrides for marimo UI elements to integrate well with Slidev themes.
+ * These styles work alongside marimo's built-in styles to ensure consistent
+ * appearance across different presentation themes.
+ */
+
+/* ============================================
+   CSS Custom Properties for Theming
+   ============================================ */
+
+:root {
+  /* Primary colors */
+  --marimo-ui-primary: #3b82f6;
+  --marimo-ui-primary-hover: #2563eb;
+  --marimo-ui-primary-light: #93c5fd;
+
+  /* Background colors */
+  --marimo-ui-bg: #ffffff;
+  --marimo-ui-bg-muted: #f9fafb;
+  --marimo-ui-bg-hover: #f3f4f6;
+
+  /* Text colors */
+  --marimo-ui-text: #1f2937;
+  --marimo-ui-text-muted: #6b7280;
+
+  /* Border colors */
+  --marimo-ui-border: #e5e7eb;
+  --marimo-ui-border-focus: #3b82f6;
+
+  /* Status colors */
+  --marimo-ui-success: #22c55e;
+  --marimo-ui-error: #ef4444;
+  --marimo-ui-warning: #f59e0b;
+
+  /* Shadows */
+  --marimo-ui-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+  --marimo-ui-shadow-lg: 0 4px 6px rgba(0, 0, 0, 0.1);
+
+  /* Radii */
+  --marimo-ui-radius: 6px;
+  --marimo-ui-radius-lg: 8px;
+}
+
+/* Dark mode overrides */
+.dark,
+[data-theme="dark"] {
+  --marimo-ui-primary: #60a5fa;
+  --marimo-ui-primary-hover: #93c5fd;
+  --marimo-ui-primary-light: #1e40af;
+
+  --marimo-ui-bg: #1f2937;
+  --marimo-ui-bg-muted: #374151;
+  --marimo-ui-bg-hover: #4b5563;
+
+  --marimo-ui-text: #f9fafb;
+  --marimo-ui-text-muted: #9ca3af;
+
+  --marimo-ui-border: #4b5563;
+  --marimo-ui-border-focus: #60a5fa;
+
+  --marimo-ui-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+  --marimo-ui-shadow-lg: 0 4px 6px rgba(0, 0, 0, 0.3);
+}
+
+/* ============================================
+   Marimo UI Element Overrides
+   ============================================ */
+
+/* Generic UI element container */
+marimo-ui-element {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  font-size: 0.875rem;
+}
+
+/* Slider overrides */
+marimo-slider {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.75rem;
+  min-width: 150px;
+}
+
+marimo-slider label {
+  font-weight: 500;
+  color: var(--marimo-ui-text);
+}
+
+marimo-slider output {
+  min-width: 3ch;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  color: var(--marimo-ui-text-muted);
+}
+
+/* Dropdown overrides */
+marimo-dropdown {
+  display: inline-block;
+}
+
+marimo-dropdown select {
+  appearance: none;
+  background-color: var(--marimo-ui-bg);
+  border: 1px solid var(--marimo-ui-border);
+  border-radius: var(--marimo-ui-radius);
+  padding: 0.5rem 2rem 0.5rem 0.75rem;
+  font-size: 0.875rem;
+  color: var(--marimo-ui-text);
+  cursor: pointer;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%236b7280' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.5rem center;
+  transition: border-color 0.15s ease;
+}
+
+marimo-dropdown select:hover {
+  border-color: var(--marimo-ui-primary);
+}
+
+marimo-dropdown select:focus {
+  outline: none;
+  border-color: var(--marimo-ui-border-focus);
+  box-shadow: 0 0 0 2px var(--marimo-ui-primary-light);
+}
+
+/* Checkbox overrides */
+marimo-checkbox {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+marimo-checkbox input[type="checkbox"] {
+  width: 1rem;
+  height: 1rem;
+  accent-color: var(--marimo-ui-primary);
+  cursor: pointer;
+}
+
+marimo-checkbox label {
+  color: var(--marimo-ui-text);
+  cursor: pointer;
+}
+
+/* Switch overrides */
+marimo-switch {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+/* Text input overrides */
+marimo-text,
+marimo-text-area,
+marimo-number {
+  display: inline-block;
+}
+
+marimo-text input,
+marimo-number input {
+  background-color: var(--marimo-ui-bg);
+  border: 1px solid var(--marimo-ui-border);
+  border-radius: var(--marimo-ui-radius);
+  padding: 0.5rem 0.75rem;
+  font-size: 0.875rem;
+  color: var(--marimo-ui-text);
+  transition: border-color 0.15s ease;
+}
+
+marimo-text input:focus,
+marimo-number input:focus {
+  outline: none;
+  border-color: var(--marimo-ui-border-focus);
+  box-shadow: 0 0 0 2px var(--marimo-ui-primary-light);
+}
+
+marimo-text-area textarea {
+  background-color: var(--marimo-ui-bg);
+  border: 1px solid var(--marimo-ui-border);
+  border-radius: var(--marimo-ui-radius);
+  padding: 0.5rem 0.75rem;
+  font-size: 0.875rem;
+  color: var(--marimo-ui-text);
+  resize: vertical;
+  min-height: 60px;
+}
+
+marimo-text-area textarea:focus {
+  outline: none;
+  border-color: var(--marimo-ui-border-focus);
+  box-shadow: 0 0 0 2px var(--marimo-ui-primary-light);
+}
+
+/* Button overrides */
+marimo-button button {
+  background-color: var(--marimo-ui-primary);
+  color: white;
+  border: none;
+  border-radius: var(--marimo-ui-radius);
+  padding: 0.5rem 1rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+}
+
+marimo-button button:hover {
+  background-color: var(--marimo-ui-primary-hover);
+}
+
+marimo-button button:focus {
+  outline: none;
+  box-shadow: 0 0 0 2px var(--marimo-ui-bg), 0 0 0 4px var(--marimo-ui-primary);
+}
+
+marimo-button button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Radio group overrides */
+marimo-radio {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+marimo-radio label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--marimo-ui-text);
+  cursor: pointer;
+}
+
+marimo-radio input[type="radio"] {
+  accent-color: var(--marimo-ui-primary);
+}
+
+/* Date picker overrides */
+marimo-date input[type="date"] {
+  background-color: var(--marimo-ui-bg);
+  border: 1px solid var(--marimo-ui-border);
+  border-radius: var(--marimo-ui-radius);
+  padding: 0.5rem 0.75rem;
+  font-size: 0.875rem;
+  color: var(--marimo-ui-text);
+}
+
+marimo-date input[type="date"]:focus {
+  outline: none;
+  border-color: var(--marimo-ui-border-focus);
+  box-shadow: 0 0 0 2px var(--marimo-ui-primary-light);
+}
+
+/* ============================================
+   Table and DataFrame Overrides
+   ============================================ */
+
+marimo-table,
+marimo-dataframe {
+  display: block;
+  overflow-x: auto;
+  margin: 0.5rem 0;
+}
+
+marimo-table table,
+marimo-dataframe table {
+  border-collapse: collapse;
+  width: 100%;
+  font-size: 0.8125rem;
+  background-color: var(--marimo-ui-bg);
+}
+
+marimo-table th,
+marimo-dataframe th {
+  background-color: var(--marimo-ui-bg-muted);
+  font-weight: 600;
+  text-align: left;
+  padding: 0.5rem 0.75rem;
+  border-bottom: 2px solid var(--marimo-ui-border);
+  position: sticky;
+  top: 0;
+  z-index: 1;
+}
+
+marimo-table td,
+marimo-dataframe td {
+  padding: 0.375rem 0.75rem;
+  border-bottom: 1px solid var(--marimo-ui-border);
+}
+
+marimo-table tr:hover,
+marimo-dataframe tr:hover {
+  background-color: var(--marimo-ui-bg-hover);
+}
+
+/* ============================================
+   Chart and Visualization Overrides
+   ============================================ */
+
+marimo-chart,
+marimo-altair,
+marimo-plotly {
+  display: block;
+  width: 100%;
+  margin: 0.5rem 0;
+}
+
+marimo-chart canvas,
+marimo-altair svg,
+marimo-plotly .plotly {
+  max-width: 100%;
+  height: auto;
+}
+
+/* ============================================
+   Layout Components
+   ============================================ */
+
+marimo-accordion,
+marimo-tabs,
+marimo-tree {
+  display: block;
+  margin: 0.5rem 0;
+}
+
+marimo-callout {
+  display: block;
+  padding: 0.75rem 1rem;
+  border-radius: var(--marimo-ui-radius);
+  margin: 0.5rem 0;
+  background-color: var(--marimo-ui-bg-muted);
+  border-left: 4px solid var(--marimo-ui-primary);
+}
+
+marimo-stat {
+  display: inline-flex;
+  flex-direction: column;
+  padding: 0.75rem 1rem;
+  background-color: var(--marimo-ui-bg-muted);
+  border-radius: var(--marimo-ui-radius);
+  box-shadow: var(--marimo-ui-shadow);
+}
+
+marimo-progress {
+  display: block;
+  height: 0.5rem;
+  background-color: var(--marimo-ui-bg-muted);
+  border-radius: 9999px;
+  overflow: hidden;
+}
+
+marimo-progress > div {
+  height: 100%;
+  background-color: var(--marimo-ui-primary);
+  transition: width 0.3s ease;
+}
+
+/* ============================================
+   Slidev Integration
+   ============================================ */
+
+/* Scale down slightly in presentations */
+.slidev-layout marimo-ui-element,
+.slidev-layout marimo-slider,
+.slidev-layout marimo-dropdown,
+.slidev-layout marimo-checkbox,
+.slidev-layout marimo-switch,
+.slidev-layout marimo-text,
+.slidev-layout marimo-button {
+  font-size: 0.85rem;
+}
+
+/* Ensure UI elements don't break slide layouts */
+.slidev-layout .marimo-output {
+  overflow-x: auto;
+  max-width: 100%;
+}
+
+/* Reduce padding in compact slides */
+.slidev-layout[data-layout="compact"] marimo-callout,
+.slidev-layout[data-layout="compact"] marimo-stat {
+  padding: 0.5rem 0.75rem;
+}
