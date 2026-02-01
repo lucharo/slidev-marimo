@@ -211,16 +211,21 @@ export async function waitForCustomElement(
  * @returns Promise that resolves when frontend is loaded
  */
 export async function loadMarimoFrontend(): Promise<void> {
+  console.log("[marimo-live] loadMarimoFrontend() CALLED");
+
   // Return existing promise if already loading
   if (loadPromise) {
+    console.log("[marimo-live] loadMarimoFrontend() returning existing promise");
     return loadPromise;
   }
 
   // Already loaded
   if (isLoaded) {
+    console.log("[marimo-live] loadMarimoFrontend() already loaded");
     return Promise.resolve();
   }
 
+  console.log("[marimo-live] loadMarimoFrontend() starting load");
   isLoading = true;
 
   loadPromise = (async () => {

@@ -31,8 +31,11 @@ const DEFAULT_KERNEL_CONFIG: KernelConfig = {
 };
 
 export default ({ app }) => {
+  console.log("[marimo-live] MAIN.TS ENTRY POINT CALLED");
+
   // Only run on client side
   if (typeof window === "undefined") {
+    console.log("[marimo-live] SKIPPING - not in browser");
     return;
   }
 
@@ -57,21 +60,33 @@ export default ({ app }) => {
 
   // Install message bridge BEFORE loading marimo frontend
   // This ensures UI component communications are intercepted
-  installMessageBridge(kernel);
+  console.log("[marimo-live] Installing message bridge...");
+  try {
+    installMessageBridge(kernel);
+    console.log("[marimo-live] Message bridge installed");
+  } catch (err) {
+    console.error("[marimo-live] Message bridge installation failed:", err);
+  }
 
   // Load marimo frontend for interactive UI components
-  loadMarimoFrontend()
-    .then(() => {
-      console.log("[marimo-live] Frontend loaded, UI components ready");
-      // Start polling for sliders and inject styles
-      pollForSliders();
-      // Also set up observer for dynamically added sliders
-      observeSliders();
-    })
-    .catch((err) => {
-      console.warn("[marimo-live] Frontend loading failed:", err);
-      console.log("[marimo-live] UI components may not render correctly");
-    });
+  console.log("[marimo-live] About to call loadMarimoFrontend()...");
+  try {
+    loadMarimoFrontend()
+      .then(() => {
+        console.log("[marimo-live] Frontend loaded, UI components ready");
+        // Start polling for sliders and inject styles
+        pollForSliders();
+        // Also set up observer for dynamically added sliders
+        observeSliders();
+      })
+      .catch((err) => {
+        console.warn("[marimo-live] Frontend loading failed:", err);
+        console.log("[marimo-live] UI components may not render correctly");
+      });
+    console.log("[marimo-live] loadMarimoFrontend() called (promise pending)");
+  } catch (err) {
+    console.error("[marimo-live] loadMarimoFrontend() threw synchronously:", err);
+  }
 
   // Provide kernel to all components
   app.provide(KERNEL_CONNECTION_KEY, kernel);
