@@ -89,18 +89,12 @@ data = pd.DataFrame({
   "a": [1, 4, 2, 8, 5],
   "b": [-1,2,-3,-4,10]
 })
-data
 ```
 
 </div>
 <div class="col-span-3">
 
 ```marimo displayCode=false
-import pandas as pd
-data = pd.DataFrame({
-  "a": [1, 4, 2, 8, 5],
-  "b": [-1,2,-3,-4,10]
-})
 data
 ```
 
