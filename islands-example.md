@@ -105,23 +105,32 @@ data
 
 # Two Ways to Define Cells
 
-**1. Markdown code fence** (recommended for most cases):
+<div class="grid grid-cols-2 gap-8">
+<div>
 
-````md
-```marimo
-mo.md('Hello from Python!')
-```
-````
+**1. Markdown code fence** (recommended)
 
-With options: `` ```marimo displayCode=false hideLines=1,2 ``
+<pre><code>&#96;&#96;&#96;marimo
+mo.md('Hello!')
+&#96;&#96;&#96;</code></pre>
 
-**2. Vue component** (for inline/dynamic use):
+With options:
 
-```html
-<MarimoIsland
+<pre><code>&#96;&#96;&#96;marimo displayCode=false
+mo.md('Hidden code')
+&#96;&#96;&#96;</code></pre>
+
+</div>
+<div>
+
+**2. Vue component**
+
+<pre><code>&lt;MarimoIsland
   code="mo.md('Hello!')"
   :display-code="false"
-/>
-```
+/&gt;</code></pre>
 
-**Available options:** `displayCode`, `displayOutput`, `hideLines`
+</div>
+</div>
+
+**Options:** `displayCode`, `displayOutput`, `hideLines`
