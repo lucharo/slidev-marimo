@@ -8,7 +8,7 @@ addons:
 
 Basic Python code execution in Slidev.
 
-<small style="opacity: 0.6;">Not affiliated with marimo — just a contributor to the project</small>
+<small style="opacity: 0.6;">Not officially affiliated with marimo — just a contributor to the project</small>
 
 ```marimo
 import marimo as mo
