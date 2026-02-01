@@ -4,15 +4,15 @@ addons:
   - slidev-marimo-islands
 ---
 
-# Marimo Islands Demo <img src="https://marimo.io/logo.png" style="height: 1em; vertical-align: middle; margin-left: 0.3em;" />
-
-Basic Python code execution in Slidev.
-
-<small style="opacity: 0.6;">Not officially affiliated with marimo — just a contributor to the project</small>
+# marimo-islands + Slidev Demo <img src="https://marimo.io/logo.png" class="inline-block h-12 ml-2" />
 
 ```marimo
 import marimo as mo
 ```
+
+<footer class="absolute bottom-4 left-4 text-xs opacity-50">
+Not officially affiliated with marimo — just a contributor to the project
+</footer>
 
 ---
 
