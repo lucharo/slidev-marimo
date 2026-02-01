@@ -30,11 +30,11 @@
 /* Dark mode values */
 .dark {
   --marimo-output-bg: var(--slidev-code-background, #1e1e1e);
-  --marimo-output-fg: #eceeed;  /* Light text for dark mode */
+  --marimo-output-fg: #eceeed;
   --marimo-table-header-bg: rgba(255, 255, 255, 0.1);
   --marimo-table-border: rgba(255, 255, 255, 0.1);
 
-  /* Marimo UI component colors - EXACT dark mode values from marimo's CSS */
+  /* Marimo UI component colors */
   --primary: #28879f;
   --accent: #1d5b6a;
   --ring: #94a3b8;
@@ -63,6 +63,11 @@ marimo-cell-output {
   font-family: inherit !important;
   background: var(--marimo-output-bg);
   color: var(--marimo-output-fg);
+}
+
+/* Force output text color in dark mode */
+.dark marimo-cell-output {
+  color: #ffffff !important;
 }
 
 /* ============================================

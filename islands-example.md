@@ -4,7 +4,7 @@ addons:
   - slidev-marimo-islands
 ---
 
-# Marimo Islands Demo
+# <img src="https://marimo.io/logo.png" style="height: 1em; vertical-align: middle; margin-right: 0.3em;" /> Marimo Islands Demo
 
 Basic Python code execution in Slidev.
 
