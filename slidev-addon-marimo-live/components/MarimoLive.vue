@@ -391,7 +391,7 @@ function handleKeydown(event: KeyboardEvent) {
   v-for="(lineHtml, idx) in highlightedLines"
   :key="idx"
   class="code-line"
-><span class="line-content" v-html="lineHtml || ' '"></span>
+><span class="line-content" v-html="lineHtml || '\u00A0'"></span>
 </span></code></pre>
       </div>
     </div>
