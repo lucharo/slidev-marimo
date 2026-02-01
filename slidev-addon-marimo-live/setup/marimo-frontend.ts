@@ -10,7 +10,9 @@
  */
 
 // Match the marimo-islands version used by marimo server
-// Note: This is a dev version; update when stable release is available
+// TODO: Update to stable release when available
+// See: https://github.com/marimo-team/marimo/releases
+// Note: Dev versions may be removed from CDN
 const MARIMO_VERSION = "0.19.8-dev4";
 
 // Track loading state
@@ -145,14 +147,11 @@ function loadPrism(): void {
   if (typeof document === "undefined") return;
   if (document.getElementById("marimo-live-prism")) return;
 
-  // Choose theme based on dark mode
-  const isDarkMode = document.documentElement.classList.contains("dark");
+  // Use dark theme for code blocks (matches One Dark styling in component)
   const prismCss = document.createElement("link");
   prismCss.id = "marimo-live-prism";
   prismCss.rel = "stylesheet";
-  prismCss.href = isDarkMode
-    ? "https://cdn.jsdelivr.net/npm/prismjs@1.29.0/themes/prism-tomorrow.min.css"
-    : "https://cdn.jsdelivr.net/npm/prismjs@1.29.0/themes/prism-tomorrow.min.css"; // Use dark theme for code blocks
+  prismCss.href = "https://cdn.jsdelivr.net/npm/prismjs@1.29.0/themes/prism-tomorrow.min.css";
   document.head.appendChild(prismCss);
 
   // Load Prism core

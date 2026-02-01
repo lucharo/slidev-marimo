@@ -15,7 +15,7 @@
 
 // Track styling state
 let pollingStarted = false;
-let pollingInterval: ReturnType<typeof setInterval> | null = null;
+let pollingTimeoutId: ReturnType<typeof setTimeout> | null = null;
 let styledSliders = new WeakSet<HTMLElement>();
 
 /**
@@ -185,15 +185,16 @@ export function pollForSliders(maxAttempts = 40, intervalMs = 500): void {
 
     // Continue polling if under max attempts
     if (attempts < maxAttempts) {
-      setTimeout(check, intervalMs);
+      pollingTimeoutId = setTimeout(check, intervalMs);
     } else {
       pollingStarted = false;
+      pollingTimeoutId = null;
       console.debug(`[marimo-live] Slider polling complete after ${attempts} attempts`);
     }
   };
 
   // Start after a short delay to let marimo initialize
-  setTimeout(check, 500);
+  pollingTimeoutId = setTimeout(check, 500);
 }
 
 /**
@@ -249,9 +250,9 @@ export function observeSliders(): MutationObserver | null {
  * Stop polling for sliders.
  */
 export function stopPolling(): void {
-  if (pollingInterval) {
-    clearInterval(pollingInterval);
-    pollingInterval = null;
+  if (pollingTimeoutId) {
+    clearTimeout(pollingTimeoutId);
+    pollingTimeoutId = null;
   }
   pollingStarted = false;
 }

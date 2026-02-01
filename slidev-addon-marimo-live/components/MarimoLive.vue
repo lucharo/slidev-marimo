@@ -28,6 +28,7 @@
  * ```
  */
 
+import DOMPurify from "dompurify";
 import { computed, getCurrentInstance, nextTick, onMounted, onUnmounted, ref, watch } from "vue";
 import { useMarimoKernel } from "../composables/useMarimoKernel";
 import MarimoOutput from "./MarimoOutput.vue";
@@ -155,7 +156,12 @@ const highlightedCode = computed(() => {
   // Try to use Prism if available
   if (typeof window !== "undefined" && window.Prism?.languages?.python) {
     try {
-      return window.Prism.highlight(code, window.Prism.languages.python, "python");
+      const highlighted = window.Prism.highlight(code, window.Prism.languages.python, "python");
+      // Sanitize to prevent XSS - only allow span tags with class attributes
+      return DOMPurify.sanitize(highlighted, {
+        ALLOWED_TAGS: ['span'],
+        ALLOWED_ATTR: ['class']
+      });
     } catch {
       // Fall back to plain text
     }
@@ -182,11 +188,6 @@ function highlightCode() {
       window.Prism.highlightElement(codeElement.value);
     }
   });
-}
-
-// Listen for Prism ready event
-if (typeof window !== "undefined") {
-  window.addEventListener("prism-ready", highlightCode, { once: true });
 }
 
 // Get cell state from kernel
@@ -250,6 +251,11 @@ const hasExistingOutput = computed(() => {
 
 // Auto-run on mount if enabled and connected
 onMounted(() => {
+  // Listen for Prism ready event for syntax highlighting
+  if (typeof window !== "undefined") {
+    window.addEventListener("prism-ready", highlightCode, { once: true });
+  }
+
   if (props.autoRun) {
     // If cell already has output from auto_instantiate, don't re-run
     if (hasExistingOutput.value) {
@@ -312,6 +318,11 @@ onMounted(() => {
 
 // Cleanup on unmount
 onUnmounted(() => {
+  // Remove prism-ready listener in case it hasn't fired yet
+  if (typeof window !== "undefined") {
+    window.removeEventListener("prism-ready", highlightCode);
+  }
+
   if (autoRunTimeout) {
     clearTimeout(autoRunTimeout);
     autoRunTimeout = null;

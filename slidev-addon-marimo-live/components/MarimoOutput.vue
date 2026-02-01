@@ -150,18 +150,36 @@ const sanitizedConsoleHtml = computed(() => {
   return DOMPurify.sanitize(consoleOutput.value);
 });
 
+// Track timeout for cleanup
+let sliderStyleTimeout: ReturnType<typeof setTimeout> | null = null;
+
 // When HTML content changes, trigger slider styling after render
 // This ensures sliders that are dynamically added get proper styling
-watch(htmlContent, (newContent) => {
+watch(htmlContent, (newContent, _oldContent, onCleanup) => {
+  // Clear any pending timeout from previous watch
+  if (sliderStyleTimeout) {
+    clearTimeout(sliderStyleTimeout);
+    sliderStyleTimeout = null;
+  }
+
   if (newContent && newContent.includes("marimo-slider")) {
     // Wait for DOM update then inject slider styles
     nextTick(() => {
       // Small delay to let custom elements initialize
-      setTimeout(() => {
+      sliderStyleTimeout = setTimeout(() => {
         injectAllSliderStyles();
+        sliderStyleTimeout = null;
       }, 100);
     });
   }
+
+  // Cleanup on unmount or before next watch callback
+  onCleanup(() => {
+    if (sliderStyleTimeout) {
+      clearTimeout(sliderStyleTimeout);
+      sliderStyleTimeout = null;
+    }
+  });
 });
 </script>
 
