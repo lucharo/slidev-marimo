@@ -383,12 +383,17 @@ function handleKeydown(event: KeyboardEvent) {
 
     <!-- Code display (read-only, with syntax highlighting) -->
     <div v-else-if="displayCode && cellCode" class="code-container">
-      <pre class="code-block"><code ref="codeElement" class="language-python"><span
+      <div class="code-wrapper">
+        <div class="line-numbers" aria-hidden="true">
+          <span v-for="(_, idx) in highlightedLines" :key="idx" class="line-number">{{ idx + 1 }}</span>
+        </div>
+        <pre class="code-block"><code ref="codeElement" class="language-python"><span
   v-for="(lineHtml, idx) in highlightedLines"
   :key="idx"
   class="code-line"
-><span class="line-number">{{ idx + 1 }}</span><span class="line-content" v-html="lineHtml || '&nbsp;'"></span>
+><span class="line-content" v-html="lineHtml || ' '"></span>
 </span></code></pre>
+      </div>
     </div>
 
     <!-- Output display -->
@@ -412,28 +417,66 @@ function handleKeydown(event: KeyboardEvent) {
 </template>
 
 <style scoped>
+/* ==========================================================================
+   One Dark Pro Code Theme - Refined for Presentations
+   Inspired by Atom One Dark with enhanced readability
+   ========================================================================== */
+
+/* CSS Custom Properties for easy theming */
 .marimo-live {
-  position: relative;
-  border: 1px solid #374151;
-  border-radius: 8px;
-  overflow: hidden;
-  background: #1f2937;
-  margin: 1rem 0;
+  --code-bg: #282c34;
+  --code-gutter-bg: #21252b;
+  --code-gutter-border: #181a1f;
+  --code-text: #abb2bf;
+  --code-line-number: #495162;
+  --code-line-number-active: #636d83;
+
+  /* One Dark Pro syntax colors */
+  --syntax-comment: #5c6370;
+  --syntax-keyword: #c678dd;
+  --syntax-string: #98c379;
+  --syntax-number: #d19a66;
+  --syntax-function: #61afef;
+  --syntax-class: #e5c07b;
+  --syntax-operator: #56b6c2;
+  --syntax-punctuation: #abb2bf;
+  --syntax-boolean: #d19a66;
+  --syntax-decorator: #e5c07b;
+
+  /* Output area */
+  --output-bg: #1e2227;
+  --output-border: #181a1f;
+  --output-text: #d4d4d4;
+
+  /* Accent colors */
+  --accent-blue: #528bff;
+  --accent-green: #98c379;
+  --accent-red: #e06c75;
+  --accent-yellow: #e5c07b;
 }
 
-/* Light mode */
-:root:not(.dark) .marimo-live {
-  border-color: #e5e7eb;
-  background: #ffffff;
+.marimo-live {
+  position: relative;
+  border-radius: 8px;
+  overflow: hidden;
+  background: var(--code-bg);
+  margin: 1rem 0;
+  box-shadow:
+    0 4px 6px -1px rgba(0, 0, 0, 0.2),
+    0 2px 4px -2px rgba(0, 0, 0, 0.1),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.05);
+  font-family: 'JetBrains Mono', 'Fira Code', 'SF Mono', 'Cascadia Code', 'Consolas', monospace;
 }
 
 .marimo-live:focus {
-  outline: 2px solid #3b82f6;
+  outline: 2px solid var(--accent-blue);
   outline-offset: 2px;
 }
 
 .marimo-live.is-running {
-  border-color: #3b82f6;
+  box-shadow:
+    0 0 0 2px var(--accent-blue),
+    0 4px 6px -1px rgba(0, 0, 0, 0.2);
 }
 
 /* Code position variants */
@@ -442,67 +485,53 @@ function handleKeydown(event: KeyboardEvent) {
   flex-direction: column;
 }
 
-.marimo-live.code-position-top .code-container {
-  order: 1;
-}
+.marimo-live.code-position-top .code-container { order: 1; }
+.marimo-live.code-position-top .output-container { order: 2; }
+.marimo-live.code-position-bottom .code-container { order: 2; }
+.marimo-live.code-position-bottom .output-container { order: 1; }
 
-.marimo-live.code-position-top .output-container {
-  order: 2;
-}
+/* ==========================================================================
+   Status Bar
+   ========================================================================== */
 
-.marimo-live.code-position-bottom .code-container {
-  order: 2;
-}
-
-.marimo-live.code-position-bottom .output-container {
-  order: 1;
-}
-
-/* Status bar */
 .status-bar {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
-  padding: 0.5rem 0.75rem;
-  background: #374151;
-  border-bottom: 1px solid #4b5563;
+  gap: 0.625rem;
+  padding: 0.5rem 1rem;
+  background: var(--code-gutter-bg);
+  border-bottom: 1px solid var(--code-gutter-border);
   font-size: 0.75rem;
-  color: #9ca3af;
-}
-
-:root:not(.dark) .status-bar {
-  background: #f9fafb;
-  border-bottom-color: #e5e7eb;
-  color: #6b7280;
+  color: var(--code-line-number-active);
 }
 
 .status-indicator {
-  width: 12px;
-  height: 12px;
+  width: 10px;
+  height: 10px;
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
 .status-indicator .dot {
-  width: 8px;
-  height: 8px;
+  width: 6px;
+  height: 6px;
   border-radius: 50%;
-  background: #9ca3af;
+  background: var(--code-line-number);
 }
 
 .status-indicator.running .spinner {
   width: 10px;
   height: 10px;
-  border: 2px solid #3b82f6;
+  border: 2px solid var(--accent-blue);
   border-top-color: transparent;
   border-radius: 50%;
-  animation: spin 1s linear infinite;
+  animation: spin 0.8s linear infinite;
 }
 
 .status-indicator.idle .check {
-  color: #22c55e;
-  font-weight: bold;
+  color: var(--accent-green);
+  font-size: 0.875rem;
 }
 
 @keyframes spin {
@@ -510,8 +539,8 @@ function handleKeydown(event: KeyboardEvent) {
 }
 
 .status-text {
-  color: #6b7280;
   text-transform: capitalize;
+  letter-spacing: 0.02em;
 }
 
 .status-actions {
@@ -520,178 +549,269 @@ function handleKeydown(event: KeyboardEvent) {
 
 .run-button,
 .interrupt-button {
-  padding: 0.25rem 0.5rem;
+  padding: 0.25rem 0.625rem;
   border: none;
   border-radius: 4px;
-  font-size: 0.75rem;
+  font-size: 0.6875rem;
+  font-weight: 500;
   cursor: pointer;
-  transition: background 0.15s;
+  transition: all 0.15s ease;
+  letter-spacing: 0.02em;
 }
 
 .run-button {
-  background: #3b82f6;
+  background: var(--accent-blue);
   color: white;
 }
 
 .run-button:hover:not(:disabled) {
-  background: #2563eb;
+  background: #4080f0;
+  transform: translateY(-1px);
 }
 
 .run-button:disabled {
-  opacity: 0.5;
+  opacity: 0.4;
   cursor: not-allowed;
 }
 
 .interrupt-button {
-  background: #ef4444;
+  background: var(--accent-red);
   color: white;
 }
 
 .interrupt-button:hover {
-  background: #dc2626;
+  background: #d35d66;
 }
 
-/* Code container */
+/* ==========================================================================
+   Code Container - The Heart of the Component
+   ========================================================================== */
+
 .code-container {
-  background: #1f2937;
+  background: var(--code-bg);
+}
+
+.code-wrapper {
+  display: flex;
   overflow-x: auto;
 }
 
+/* Line Numbers Gutter - Separate column for clean alignment */
+.line-numbers {
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  padding: 1rem 0;
+  background: var(--code-gutter-bg);
+  border-right: 1px solid var(--code-gutter-border);
+  text-align: right;
+  user-select: none;
+  min-width: 3.5rem;
+}
+
+.line-number {
+  display: block;
+  padding: 0 1rem 0 0.75rem;
+  font-size: 0.8125rem;
+  line-height: 1.625;
+  color: var(--code-line-number);
+  font-variant-numeric: tabular-nums;
+  transition: color 0.15s ease;
+}
+
+.line-number:hover {
+  color: var(--code-line-number-active);
+}
+
+/* Code Block */
 .code-block {
+  flex: 1;
   margin: 0;
-  padding: 0.75rem 0;
-  font-family: "Fira Mono", monospace;
-  font-size: 0.875rem;
-  line-height: 1.5;
+  padding: 1rem 1.25rem;
+  background: transparent;
+  overflow-x: auto;
 }
 
 .code-line {
   display: block;
-}
-
-.line-number {
-  display: inline-block;
-  width: 3rem;
-  padding-right: 1rem;
-  text-align: right;
-  color: #9ca3af;
-  user-select: none;
+  line-height: 1.625;
+  min-height: 1.625em;
 }
 
 .line-content {
-  color: #abb2bf;
+  font-size: 0.8125rem;
+  color: var(--code-text);
+  white-space: pre;
 }
 
-/* Prism.js syntax highlighting - One Dark theme colors */
+/* ==========================================================================
+   Syntax Highlighting - One Dark Pro Colors
+   ========================================================================== */
+
+/* Comments */
 .line-content :deep(.token.comment),
 .line-content :deep(.token.prolog),
 .line-content :deep(.token.doctype),
 .line-content :deep(.token.cdata) {
-  color: #5c6370;
+  color: var(--syntax-comment);
   font-style: italic;
 }
 
+/* Keywords: if, for, def, class, return, import, etc. */
 .line-content :deep(.token.keyword) {
-  color: #c678dd;
+  color: var(--syntax-keyword);
 }
 
+/* Built-in functions and types */
 .line-content :deep(.token.builtin) {
-  color: #e5c07b;
+  color: var(--syntax-class);
 }
 
+/* Function names */
 .line-content :deep(.token.function) {
-  color: #61afef;
+  color: var(--syntax-function);
 }
 
+/* Strings */
 .line-content :deep(.token.string),
-.line-content :deep(.token.triple-quoted-string) {
-  color: #98c379;
-}
-
-.line-content :deep(.token.number) {
-  color: #d19a66;
-}
-
-.line-content :deep(.token.operator) {
-  color: #56b6c2;
-}
-
-.line-content :deep(.token.punctuation) {
-  color: #abb2bf;
-}
-
-.line-content :deep(.token.class-name) {
-  color: #e5c07b;
-}
-
-.line-content :deep(.token.boolean) {
-  color: #d19a66;
-}
-
-.line-content :deep(.token.decorator) {
-  color: #e5c07b;
-}
-
-.line-content :deep(.token.attr-name) {
-  color: #d19a66;
-}
-
+.line-content :deep(.token.triple-quoted-string),
 .line-content :deep(.token.attr-value) {
-  color: #98c379;
+  color: var(--syntax-string);
 }
 
-/* Output container */
+/* Numbers */
+.line-content :deep(.token.number),
+.line-content :deep(.token.boolean) {
+  color: var(--syntax-number);
+}
+
+/* Operators: =, +, -, *, /, etc. */
+.line-content :deep(.token.operator) {
+  color: var(--syntax-operator);
+}
+
+/* Punctuation: (), [], {}, etc. */
+.line-content :deep(.token.punctuation) {
+  color: var(--syntax-punctuation);
+}
+
+/* Class names */
+.line-content :deep(.token.class-name) {
+  color: var(--syntax-class);
+}
+
+/* Decorators: @property, @staticmethod */
+.line-content :deep(.token.decorator),
+.line-content :deep(.token.annotation) {
+  color: var(--syntax-decorator);
+}
+
+/* Attribute names */
+.line-content :deep(.token.attr-name) {
+  color: var(--syntax-number);
+}
+
+/* ==========================================================================
+   Output Container
+   ========================================================================== */
+
 .output-container {
-  padding: 0.75rem;
-  min-height: 40px;
-  background: #1f2937;
-  color: #f9fafb;
+  padding: 1rem 1.25rem;
+  min-height: 2.5rem;
+  background: var(--output-bg);
+  border-top: 1px solid var(--output-border);
+  color: var(--output-text);
+  font-size: 0.875rem;
+  line-height: 1.5;
 }
 
-:root:not(.dark) .output-container {
-  background: #ffffff;
-  color: #1f2937;
+/* When output is empty, show subtle placeholder state */
+.output-container:empty::before {
+  content: '';
+  display: block;
+  height: 1.5rem;
 }
 
-/* Cell not found warning */
+/* ==========================================================================
+   Warning States
+   ========================================================================== */
+
 .cell-not-found {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
-  padding: 1rem;
-  background: #fef3c7;
-  font-size: 0.875rem;
-  color: #92400e;
+  gap: 0.625rem;
+  padding: 1rem 1.25rem;
+  background: rgba(229, 192, 123, 0.1);
+  border-left: 3px solid var(--accent-yellow);
+  font-size: 0.8125rem;
+  color: var(--accent-yellow);
 }
 
-/* Connection warning */
 .connection-warning {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
-  padding: 0.5rem 0.75rem;
-  background: #fef3c7;
-  border-top: 1px solid #fcd34d;
+  gap: 0.625rem;
+  padding: 0.625rem 1rem;
+  background: rgba(229, 192, 123, 0.08);
+  border-top: 1px solid rgba(229, 192, 123, 0.2);
   font-size: 0.75rem;
-  color: #92400e;
+  color: var(--accent-yellow);
 }
 
 .warning-icon {
-  font-size: 1rem;
+  font-size: 0.875rem;
+  opacity: 0.9;
 }
 
 .reconnect-button {
   margin-left: auto;
   padding: 0.25rem 0.5rem;
-  background: #f59e0b;
-  color: white;
+  background: var(--accent-yellow);
+  color: #1e2227;
   border: none;
   border-radius: 4px;
-  font-size: 0.75rem;
+  font-size: 0.6875rem;
+  font-weight: 600;
   cursor: pointer;
+  transition: all 0.15s ease;
 }
 
 .reconnect-button:hover {
-  background: #d97706;
+  filter: brightness(1.1);
+  transform: translateY(-1px);
+}
+
+/* ==========================================================================
+   Light Mode Overrides (when Slidev is in light mode)
+   ========================================================================== */
+
+:root:not(.dark) .marimo-live {
+  --code-bg: #fafafa;
+  --code-gutter-bg: #f0f0f0;
+  --code-gutter-border: #e0e0e0;
+  --code-text: #383a42;
+  --code-line-number: #9d9d9f;
+  --code-line-number-active: #6a6a6c;
+
+  /* One Light syntax colors */
+  --syntax-comment: #a0a1a7;
+  --syntax-keyword: #a626a4;
+  --syntax-string: #50a14f;
+  --syntax-number: #986801;
+  --syntax-function: #4078f2;
+  --syntax-class: #c18401;
+  --syntax-operator: #0184bc;
+  --syntax-punctuation: #383a42;
+  --syntax-boolean: #986801;
+  --syntax-decorator: #c18401;
+
+  --output-bg: #ffffff;
+  --output-border: #e8e8e8;
+  --output-text: #383a42;
+
+  box-shadow:
+    0 4px 6px -1px rgba(0, 0, 0, 0.08),
+    0 2px 4px -2px rgba(0, 0, 0, 0.04),
+    inset 0 0 0 1px rgba(0, 0, 0, 0.06);
 }
 </style>
