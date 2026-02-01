@@ -2,6 +2,11 @@
   "name": "slidev-marimo",
   "type": "module",
   "private": true,
+  "scripts": {
+    "dev": "slidev islands-example.md",
+    "build": "slidev build islands-example.md --base /slidev-marimo/",
+    "preview": "vite preview"
+  },
   "devDependencies": {
     "@biomejs/biome": "2.3.7"
   },
