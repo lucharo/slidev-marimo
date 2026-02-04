@@ -1,0 +1,175 @@
+/**
+ * Marimo Live Styles
+ *
+ * Global styles for the marimo live addon.
+ * These can be imported in presentations for consistent styling.
+ */
+
+/* Import Fira Mono font for code */
+@import url("https://fonts.googleapis.com/css2?family=Fira+Mono:wght@400;500;700&display=swap");
+
+/* Marimo cell styling */
+.marimo-live {
+  --marimo-primary: #3b82f6;
+  --marimo-primary-hover: #2563eb;
+  --marimo-success: #22c55e;
+  --marimo-error: #ef4444;
+  --marimo-warning: #f59e0b;
+  --marimo-text: #1f2937;
+  --marimo-text-muted: #6b7280;
+  --marimo-bg: #ffffff;
+  --marimo-bg-code: #1f2937;
+  --marimo-border: #e5e7eb;
+}
+
+/* Dark mode support */
+.dark .marimo-live {
+  --marimo-text: #f3f4f6;
+  --marimo-text-muted: #9ca3af;
+  --marimo-bg: #1f2937;
+  --marimo-bg-code: #111827;
+  --marimo-border: #374151;
+}
+
+/* Code highlighting (basic) */
+.marimo-live .code-block .keyword {
+  color: #c792ea;
+}
+
+.marimo-live .code-block .string {
+  color: #c3e88d;
+}
+
+.marimo-live .code-block .number {
+  color: #f78c6c;
+}
+
+.marimo-live .code-block .comment {
+  color: #546e7a;
+  font-style: italic;
+}
+
+.marimo-live .code-block .function {
+  color: #82aaff;
+}
+
+.marimo-live .code-block .class-name {
+  color: #ffcb6b;
+}
+
+/* Output table styling */
+.marimo-output table {
+  border-collapse: collapse;
+  width: 100%;
+  font-size: 0.875rem;
+  margin: 0.5rem 0;
+}
+
+.marimo-output th,
+.marimo-output td {
+  border: 1px solid var(--marimo-border, #e5e7eb);
+  padding: 0.5rem 0.75rem;
+  text-align: left;
+}
+
+.marimo-output th {
+  background: #f9fafb;
+  font-weight: 600;
+}
+
+.dark .marimo-output th {
+  background: #374151;
+}
+
+.marimo-output tr:hover {
+  background: #f3f4f6;
+}
+
+.dark .marimo-output tr:hover {
+  background: #374151;
+}
+
+/* DataFrame styling (pandas/polars) */
+.marimo-output .dataframe {
+  font-family: "Fira Mono", monospace;
+  font-size: 0.8125rem;
+}
+
+.marimo-output .dataframe th {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+}
+
+/* Plot/image styling */
+.marimo-output img,
+.marimo-output svg {
+  max-width: 100%;
+  height: auto;
+  display: block;
+  margin: 0.5rem auto;
+}
+
+/* Interactive element container */
+.marimo-ui-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  padding: 0.75rem;
+  background: #f9fafb;
+  border-radius: 6px;
+  margin: 0.5rem 0;
+}
+
+.dark .marimo-ui-container {
+  background: #374151;
+}
+
+/* Slidev-specific overrides */
+.slidev-layout .marimo-live {
+  font-size: 0.9em;
+}
+
+.slidev-layout .marimo-live .code-block {
+  font-size: 0.85em;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .marimo-live .code-container {
+    font-size: 0.75rem;
+  }
+
+  .marimo-live .line-number {
+    width: 2rem;
+    padding-right: 0.5rem;
+  }
+}
+
+/* Animation for status changes */
+@keyframes pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+.marimo-live.is-running .status-indicator {
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+/* Focus styles for accessibility */
+.marimo-live:focus-visible {
+  outline: 2px solid var(--marimo-primary);
+  outline-offset: 2px;
+}
+
+.marimo-ui button:focus-visible,
+.marimo-ui input:focus-visible,
+.marimo-ui select:focus-visible {
+  outline: 2px solid var(--marimo-primary);
+  outline-offset: 2px;
+}
