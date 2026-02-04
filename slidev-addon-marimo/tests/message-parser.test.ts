@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
-import type { CellOutput } from "./message-parser";
-import { extractHtml, parseMessage } from "./message-parser";
+import type { CellOutput } from "../setup/live/message-parser";
+import { extractHtml, parseMessage } from "../setup/live/message-parser";
 
 describe("parseMessage", () => {
   it("parses valid message", () => {

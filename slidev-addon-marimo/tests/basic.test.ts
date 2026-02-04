@@ -1,5 +1,5 @@
 /**
- * Tests for slidev-marimo-islands refactored architecture
+ * Tests for slidev-addon-marimo islands mode
  *
  * Tests cover:
  * - Cell ID generation (4-char alphanumeric format)
@@ -54,7 +54,7 @@ const mockDom = () => {
   global.customElements = global.window.customElements;
 };
 
-describe("slidev-marimo-islands", () => {
+describe("slidev-addon-marimo (islands mode)", () => {
   beforeEach(() => {
     // Save original globals before mocking
     originalDocument = global.document;
@@ -87,12 +87,13 @@ describe("slidev-marimo-islands", () => {
       resetCellIds();
 
       const ids = new Set<string>();
-      for (let i = 0; i < 100; i++) {
+      // Generate up to the limit of 30 cells
+      for (let i = 0; i < 30; i++) {
         ids.add(generateCellId());
       }
 
-      // All 100 should be unique
-      expect(ids.size).toBe(100);
+      // All 30 should be unique
+      expect(ids.size).toBe(30);
     });
 
     it("should track and release IDs", async () => {
@@ -126,7 +127,7 @@ describe("slidev-marimo-islands", () => {
   describe("Kernel State Manager", () => {
     it("should start in idle state", async () => {
       const { createMarimoKernel } = await import(
-        "../composables/useMarimoKernel"
+        "../composables/islands/useMarimoKernel"
       );
       const kernel = createMarimoKernel();
 
@@ -136,7 +137,7 @@ describe("slidev-marimo-islands", () => {
 
     it("should transition through states correctly", async () => {
       const { createMarimoKernel } = await import(
-        "../composables/useMarimoKernel"
+        "../composables/islands/useMarimoKernel"
       );
       const kernel = createMarimoKernel();
 
@@ -149,7 +150,7 @@ describe("slidev-marimo-islands", () => {
 
     it("should handle error state", async () => {
       const { createMarimoKernel } = await import(
-        "../composables/useMarimoKernel"
+        "../composables/islands/useMarimoKernel"
       );
       const kernel = createMarimoKernel();
 
@@ -162,7 +163,7 @@ describe("slidev-marimo-islands", () => {
 
     it("should resolve waitForReady when already ready", async () => {
       const { createMarimoKernel } = await import(
-        "../composables/useMarimoKernel"
+        "../composables/islands/useMarimoKernel"
       );
       const kernel = createMarimoKernel();
 
@@ -174,7 +175,7 @@ describe("slidev-marimo-islands", () => {
 
     it("should reject waitForReady on error", async () => {
       const { createMarimoKernel } = await import(
-        "../composables/useMarimoKernel"
+        "../composables/islands/useMarimoKernel"
       );
       const kernel = createMarimoKernel();
 
@@ -186,7 +187,7 @@ describe("slidev-marimo-islands", () => {
 
     it("should reset state", async () => {
       const { createMarimoKernel } = await import(
-        "../composables/useMarimoKernel"
+        "../composables/islands/useMarimoKernel"
       );
       const kernel = createMarimoKernel();
 
@@ -201,7 +202,7 @@ describe("slidev-marimo-islands", () => {
   describe("Cell Registry", () => {
     it("should register cells and return IDs", async () => {
       const { createCellRegistry } = await import(
-        "../composables/useCellRegistry"
+        "../composables/islands/useCellRegistry"
       );
       // Need to reset cell IDs before creating registry
       const { resetCellIds } = await import("../utils/cellId");
@@ -216,7 +217,7 @@ describe("slidev-marimo-islands", () => {
 
     it("should track cell state", async () => {
       const { createCellRegistry } = await import(
-        "../composables/useCellRegistry"
+        "../composables/islands/useCellRegistry"
       );
       const { resetCellIds } = await import("../utils/cellId");
       resetCellIds();
@@ -233,7 +234,7 @@ describe("slidev-marimo-islands", () => {
 
     it("should update cell state", async () => {
       const { createCellRegistry } = await import(
-        "../composables/useCellRegistry"
+        "../composables/islands/useCellRegistry"
       );
       const { resetCellIds } = await import("../utils/cellId");
       resetCellIds();
@@ -248,7 +249,7 @@ describe("slidev-marimo-islands", () => {
 
     it("should unregister cells", async () => {
       const { createCellRegistry } = await import(
-        "../composables/useCellRegistry"
+        "../composables/islands/useCellRegistry"
       );
       const { resetCellIds } = await import("../utils/cellId");
       resetCellIds();
@@ -265,7 +266,7 @@ describe("slidev-marimo-islands", () => {
 
     it("should get all cells", async () => {
       const { createCellRegistry } = await import(
-        "../composables/useCellRegistry"
+        "../composables/islands/useCellRegistry"
       );
       const { resetCellIds } = await import("../utils/cellId");
       resetCellIds();
@@ -282,7 +283,7 @@ describe("slidev-marimo-islands", () => {
 
     it("should reset registry", async () => {
       const { createCellRegistry } = await import(
-        "../composables/useCellRegistry"
+        "../composables/islands/useCellRegistry"
       );
       const { resetCellIds } = await import("../utils/cellId");
       resetCellIds();
@@ -370,7 +371,7 @@ describe("slidev-marimo-islands", () => {
     it("should have correct package structure", () => {
       const packageJson = require("../package.json");
 
-      expect(packageJson.name).toBe("slidev-marimo-islands");
+      expect(packageJson.name).toBe("slidev-addon-marimo");
       expect(packageJson.peerDependencies).toHaveProperty("@slidev/cli");
       expect(packageJson.peerDependencies).toHaveProperty("vue");
     });
