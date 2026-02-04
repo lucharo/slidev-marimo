@@ -7,8 +7,8 @@
  */
 
 import { computed } from "vue";
-import type { CellOutput } from "../setup/message-parser";
-import { extractHtml } from "../setup/message-parser";
+import type { CellOutput } from "../../setup/live/message-parser";
+import { extractHtml } from "../../setup/live/message-parser";
 
 const props = defineProps<{
   output: CellOutput | null;

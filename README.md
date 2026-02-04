@@ -20,16 +20,16 @@ npx slidev islands-example.md
 
 ```bash
 # npm
-npm install @slidev/cli slidev-marimo-islands
+npm install @slidev/cli slidev-addon-marimo
 
 # pnpm
-pnpm add @slidev/cli slidev-marimo-islands
+pnpm add @slidev/cli slidev-addon-marimo
 
 # bun
-bun add @slidev/cli slidev-marimo-islands
+bun add @slidev/cli slidev-addon-marimo
 
 # yarn
-yarn add @slidev/cli slidev-marimo-islands
+yarn add @slidev/cli slidev-addon-marimo
 ```
 
 ## Usage
@@ -39,7 +39,7 @@ Add to your slidev frontmatter:
 ```yaml
 ---
 addons:
-  - slidev-marimo-islands
+  - slidev-addon-marimo
 ---
 ```
 
@@ -59,7 +59,7 @@ Run your presentation:
 npx slidev slides.md
 ```
 
-For detailed documentation, component props, and limitations, see the [slidev-marimo-islands README](./slidev-addon-marimo-islands/README.md).
+For detailed documentation, component props, and limitations, see the [slidev-addon-marimo README](./slidev-addon-marimo/README.md).
 
 ## License
 

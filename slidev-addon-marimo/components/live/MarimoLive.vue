@@ -29,7 +29,7 @@
  */
 
 import { computed, getCurrentInstance, onMounted, onUnmounted, ref, watch } from "vue";
-import { useMarimoKernel } from "../composables/useMarimoKernel";
+import { useMarimoKernel } from "../../composables/live/useMarimoKernel";
 import MarimoOutput from "./MarimoOutput.vue";
 
 const props = withDefaults(

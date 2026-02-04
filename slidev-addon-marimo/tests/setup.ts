@@ -1,5 +1,5 @@
 /**
- * Test setup for slidev-marimo-islands
+ * Test setup for slidev-addon-marimo
  * Mocks DOM environment and provides global test utilities
  */
 

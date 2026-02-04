@@ -15,10 +15,10 @@
  * discover them on load.
  */
 
-import type { MarimoKernel } from "../composables/useMarimoKernel";
-import type { CellRegistry } from "../composables/useCellRegistry";
-import { MARIMO_VERSION } from "./constants";
-import { patchKernelMessages } from "./kernel-message-patch";
+import type { MarimoKernel } from "../../composables/islands/useMarimoKernel";
+import type { CellRegistry } from "../../composables/islands/useCellRegistry";
+import { MARIMO_VERSION } from "../shared/constants";
+import { patchKernelMessages } from "../shared/kernel-message-patch";
 
 // Track if bridge trap is installed
 let bridgeTrapInstalled = false;

@@ -1,12 +1,12 @@
 ---
 theme: default
 addons:
-  - slidev-marimo-live
+  - slidev-addon-marimo
 ---
 
 # Marimo Live Bug Fix Validation
 
-Testing the 5 bug fixes in slidev-addon-marimo-live
+Testing the 5 bug fixes in slidev-addon-marimo
 
 ---
 

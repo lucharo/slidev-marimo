@@ -1,9 +1,9 @@
 <script setup lang="ts">
 import { computed, nextTick, onMounted, onUnmounted, ref, watch } from "vue";
-import { useMarimoKernel } from "../composables/useMarimoKernel";
-import { useCellRegistry } from "../composables/useCellRegistry";
-import { createSingleIsland, isMarimoInitialized } from "../setup/island-manager";
-import "../utils/debugMarimo"; // Side effect: adds window.debugMarimo()
+import { useMarimoKernel } from "../../composables/islands/useMarimoKernel";
+import { useCellRegistry } from "../../composables/islands/useCellRegistry";
+import { createSingleIsland, isMarimoInitialized } from "../../setup/islands/island-manager";
+import "../../utils/debugMarimo"; // Side effect: adds window.debugMarimo()
 
 /**
  * Marimo Island Component

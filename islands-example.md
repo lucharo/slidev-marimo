@@ -1,7 +1,7 @@
 ---
 theme: default
 addons:
-  - slidev-marimo-islands
+  - slidev-addon-marimo
 ---
 
 # marimo-islands + Slidev Demo <img src="https://marimo.io/logo.png" class="inline-block h-12 ml-2" />

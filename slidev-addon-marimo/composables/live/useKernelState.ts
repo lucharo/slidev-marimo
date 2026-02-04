@@ -11,7 +11,7 @@ import type {
   CellOutput,
   CellStatus,
   VariableInfo,
-} from "../setup/message-parser";
+} from "../../setup/live/message-parser";
 
 // Cell state
 export interface CellState {

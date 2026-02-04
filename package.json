@@ -12,7 +12,6 @@
   },
   "dependencies": {
     "@slidev/theme-default": "^0.25.0",
-    "slidev-marimo-islands": "file:slidev-addon-marimo-islands",
-    "slidev-marimo-live": "file:slidev-addon-marimo-live"
+    "slidev-addon-marimo": "file:slidev-addon-marimo"
   }
 }

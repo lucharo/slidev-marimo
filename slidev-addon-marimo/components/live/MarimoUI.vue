@@ -12,9 +12,9 @@
  */
 
 import { computed, inject, onMounted, ref, watch } from "vue";
-import { KERNEL_CONNECTION_KEY } from "../composables/useMarimoKernel";
-import type { KernelConnection } from "../setup/kernel-connection";
-import { syncUIValue, useUISync } from "../setup/ui-sync";
+import { KERNEL_CONNECTION_KEY } from "../../composables/live/useMarimoKernel";
+import type { KernelConnection } from "../../setup/live/kernel-connection";
+import { syncUIValue, useUISync } from "../../setup/live/ui-sync";
 
 const props = defineProps<{
   /** The marimo UI element object ID */

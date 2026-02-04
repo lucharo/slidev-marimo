@@ -9,12 +9,12 @@ import { computed, type InjectionKey, inject, type Ref, ref } from "vue";
 import type {
   ConnectionState,
   KernelConnection,
-} from "../setup/kernel-connection";
+} from "../../setup/live/kernel-connection";
 import type {
   CellOpData,
   KernelReadyData,
   VariablesData,
-} from "../setup/message-parser";
+} from "../../setup/live/message-parser";
 import {
   registerNotebookCells,
   setCellError,

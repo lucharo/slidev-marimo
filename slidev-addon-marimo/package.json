@@ -1,7 +1,7 @@
 {
-  "name": "slidev-marimo-live",
+  "name": "slidev-addon-marimo",
   "version": "0.1.0",
-  "description": "Slidev addon for live marimo kernel integration via WebSocket",
+  "description": "Slidev addon for interactive marimo notebooks - supports both Islands (Pyodide/WASM) and Live (WebSocket kernel) modes",
   "main": "index.ts",
   "types": "index.ts",
   "exports": {
@@ -17,6 +17,8 @@
     "marimo",
     "jupyter",
     "python",
+    "wasm",
+    "pyodide",
     "live-kernel",
     "interactive-notebook",
     "python-slides"
@@ -33,6 +35,8 @@
   "scripts": {
     "test": "vitest --run",
     "test:watch": "vitest",
+    "test:ui": "vitest --ui",
+    "test:coverage": "vitest --coverage",
     "lint": "biome check .",
     "lint:fix": "biome check --write .",
     "format": "biome format --write .",
@@ -52,6 +56,7 @@
     "components",
     "setup",
     "composables",
+    "utils",
     "styles",
     "scripts",
     "README.md",
@@ -61,7 +66,7 @@
   "repository": {
     "type": "git",
     "url": "https://github.com/lucharo/slidev-marimo.git",
-    "directory": "slidev-addon-marimo-live"
+    "directory": "slidev-addon-marimo"
   },
   "homepage": "https://github.com/lucharo/slidev-marimo#readme",
   "bugs": {
