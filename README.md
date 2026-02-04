@@ -2,6 +2,17 @@
 
 Slidev addons for embedding interactive Python ([marimo](https://marimo.io)) cells in your presentations.
 
+[Check the live demo](https://lucharo.github.io/slidev-marimo/)
+
+All cells share state just like in a normal marimo notebook - variables defined in one cell are available in all others.
+
+## Quick Start
+
+```bash
+# Try it instantly with npx
+npx slidev https://raw.githubusercontent.com/lucharo/slidev-marimo/main/islands-example.md
+```
+
 ## Installation
 
 ```bash
