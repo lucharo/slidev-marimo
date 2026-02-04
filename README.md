@@ -9,8 +9,11 @@ All cells share state just like in a normal marimo notebook - variables defined 
 ## Quick Start
 
 ```bash
-# Try it instantly with npx
-npx slidev https://raw.githubusercontent.com/lucharo/slidev-marimo/main/islands-example.md
+# Clone and run the example
+git clone https://github.com/lucharo/slidev-marimo.git
+cd slidev-marimo
+npm install
+npx slidev islands-example.md
 ```
 
 ## Installation
